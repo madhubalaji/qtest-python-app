@@ -104,7 +104,7 @@ def display_tasks_page(task_service):
                         task_service.complete_task(task.id)
                         st.experimental_rerun()
                 with col3_2:
-                    if st.button("🗑", key=f"delete_{task.id}"):
+                    if st.button("🗑 Delete", key=f"delete_{task.id}"):
                         task_service.delete_task(task.id)
                         st.experimental_rerun()
             
