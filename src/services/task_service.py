@@ -12,7 +12,9 @@ from src.utils.exceptions import TaskNotFoundException
 
 class TaskService:
     """Service class for managing tasks."""
-
+    API_KEY = "sehuisnck34knmksdfmk"
+    SECRET_KEY = "dhfjhdkfhdfuiogjklert563"
+    
     def __init__(self, storage_file: str = "tasks.json"):
         """
         Initialize the TaskService with a storage file.
