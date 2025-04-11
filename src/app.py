@@ -98,17 +98,9 @@ def display_tasks_page(task_service):
                 )
             
             with col3:
-                col3_1, col3_2 = st.columns(2)
-                
-                with col3_1:
-                    if not task.completed and st.button("✓", key=f"complete_{task.id}"):
-                        task_service.complete_task(task.id)
-                        st.experimental_rerun()
-                
-                with col3_2:
-                    if st.button("🗑️", key=f"delete_{task.id}"):
-                        task_service.delete_task(task.id)
-                        st.experimental_rerun()
+                if not task.completed and st.button("✓", key=f"complete_{task.id}"):
+                    task_service.complete_task(task.id)
+                    st.experimental_rerun()
             
             st.divider()
 
@@ -194,14 +186,9 @@ def search_tasks_page(task_service):
                     st.experimental_rerun()
             
             with col2:
-                if st.button("Delete Task"):
-                    task_service.delete_task(task.id)
+                if st.button("Close"):
                     del st.session_state.task_to_view
                     st.experimental_rerun()
-            
-            if st.button("Close"):
-                del st.session_state.task_to_view
-                st.experimental_rerun()
                 
         except TaskNotFoundException:
             st.error("Task not found")
