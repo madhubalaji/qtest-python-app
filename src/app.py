@@ -99,7 +99,7 @@ def display_tasks_page(task_service):
             
             with col3:
                 # Add delete button
-                if st.button("🗑️ Delete", key=f"delete_{task.id}"):
+                if st.button("🗑️ Remove", key=f"delete_{task.id}"):
                     task_service.delete_task(task.id)
                     st.success(f"Task '{task.title}' has been deleted.")
                     st.rerun()
