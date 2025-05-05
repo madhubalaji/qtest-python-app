@@ -32,10 +32,12 @@ def main():
     
     # Sidebar for navigation
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["View Tasks", "Add Task", "Search Tasks"])
+    page = st.sidebar.radio("Go to", ["View Tasks", "Tasks by User", "Add Task", "Search Tasks"])
     
     if page == "View Tasks":
         display_tasks_page(task_service)
+    elif page == "Tasks by User":
+        tasks_by_user_page(task_service)
     elif page == "Add Task":
         add_task_page(task_service)
     elif page == "Search Tasks":
@@ -130,6 +132,62 @@ def add_task_page(task_service):
                     priority=priority.lower()
                 )
                 st.success(f"Task '{title}' added successfully with ID {task.id}")
+
+
+def tasks_by_user_page(task_service):
+    """Display tasks organized by user."""
+    st.header("Tasks by User")
+    
+    # Filter option
+    show_completed = st.checkbox("Show completed tasks", value=True)
+    
+    # Get tasks organized by user
+    tasks_by_user = task_service.get_tasks_by_user(show_completed)
+    
+    if not tasks_by_user:
+        st.info("No tasks found.")
+        return
+    
+    # Display tasks for each user
+    for user, tasks in tasks_by_user.items():
+        with st.expander(f"User: {user} ({len(tasks)} tasks)", expanded=True):
+            if not tasks:
+                st.info(f"No tasks for {user}.")
+                continue
+            
+            # Display tasks for this user
+            for task in tasks:
+                with st.container():
+                    col1, col2, col3 = st.columns([3, 1, 1])
+                    
+                    with col1:
+                        if task.completed:
+                            st.markdown(f"~~**{task.title}**~~")
+                        else:
+                            st.markdown(f"**{task.title}**")
+                        
+                        with st.expander("Details"):
+                            st.write(f"**Description:** {task.description}")
+                            st.write(f"**Created at:** {task.created_at}")
+                    
+                    with col2:
+                        priority_color = {
+                            "low": "blue",
+                            "medium": "orange",
+                            "high": "red"
+                        }.get(task.priority.lower(), "gray")
+                        
+                        st.markdown(
+                            f"<span style='color:{priority_color};font-weight:bold;'>{task.priority.upper()}</span>",
+                            unsafe_allow_html=True
+                        )
+                    
+                    with col3:
+                        if not task.completed and st.button("✓", key=f"complete_{task.id}_user"):
+                            task_service.complete_task(task.id)
+                            st.experimental_rerun()
+                    
+                    st.divider()
 
 
 def search_tasks_page(task_service):

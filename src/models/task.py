@@ -16,7 +16,8 @@ class Task:
         description: str = "",
         priority: str = "medium",
         completed: bool = False,
-        created_at: Optional[str] = None
+        created_at: Optional[str] = None,
+        user: str = "default"
     ):
         """
         Initialize a new Task instance.
@@ -49,7 +50,8 @@ class Task:
             "description": self.description,
             "priority": self.priority,
             "completed": self.completed,
-            "created_at": self.created_at
+            "created_at": self.created_at,
+            "user": self.user
         }
 
     @classmethod
@@ -69,7 +71,8 @@ class Task:
             description=data.get("description", ""),
             priority=data.get("priority", "medium"),
             completed=data.get("completed", False),
-            created_at=data.get("created_at")
+            created_at=data.get("created_at"),
+            user=data.get("user", "default")
         )
 
     def __str__(self) -> str:

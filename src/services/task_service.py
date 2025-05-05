@@ -172,3 +172,23 @@ class TaskService:
             task for task in self.tasks
             if keyword in task.title.lower() or keyword in task.description.lower()
         ]
+        
+    def get_tasks_by_user(self, show_completed: bool = True) -> Dict[str, List[Task]]:
+        """
+        Get tasks organized by user.
+        
+        Args:
+            show_completed: Whether to include completed tasks
+            
+        Returns:
+            Dictionary with users as keys and lists of their tasks as values
+        """
+        tasks_by_user = {}
+        tasks = self.get_all_tasks(show_completed)
+        
+        for task in tasks:
+            if task.user not in tasks_by_user:
+                tasks_by_user[task.user] = []
+            tasks_by_user[task.user].append(task)
+            
+        return tasks_by_user
