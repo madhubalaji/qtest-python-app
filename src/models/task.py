@@ -16,7 +16,8 @@ class Task:
         description: str = "",
         priority: str = "medium",
         completed: bool = False,
-        created_at: Optional[str] = None
+        created_at: Optional[str] = None,
+        assigned_to: str = "unassigned"
     ):
         """
         Initialize a new Task instance.
@@ -35,6 +36,7 @@ class Task:
         self.priority = priority
         self.completed = completed
         self.created_at = created_at or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.assigned_to = assigned_to
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -49,7 +51,8 @@ class Task:
             "description": self.description,
             "priority": self.priority,
             "completed": self.completed,
-            "created_at": self.created_at
+            "created_at": self.created_at,
+            "assigned_to": self.assigned_to
         }
 
     @classmethod
@@ -69,7 +72,8 @@ class Task:
             description=data.get("description", ""),
             priority=data.get("priority", "medium"),
             completed=data.get("completed", False),
-            created_at=data.get("created_at")
+            created_at=data.get("created_at"),
+            assigned_to=data.get("assigned_to", "unassigned")
         )
 
     def __str__(self) -> str:

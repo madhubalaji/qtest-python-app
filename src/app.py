@@ -32,10 +32,12 @@ def main():
     
     # Sidebar for navigation
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["View Tasks", "Add Task", "Search Tasks"])
+    page = st.sidebar.radio("Go to", ["View Tasks", "User Dashboard", "Add Task", "Search Tasks"])
     
     if page == "View Tasks":
         display_tasks_page(task_service)
+    elif page == "User Dashboard":
+        user_dashboard_page(task_service)
     elif page == "Add Task":
         add_task_page(task_service)
     elif page == "Search Tasks":
@@ -117,6 +119,7 @@ def add_task_page(task_service):
             options=["Low", "Medium", "High"],
             value="Medium"
         )
+        assigned_to = st.text_input("Assigned To", value="unassigned")
         
         submitted = st.form_submit_button("Add Task")
         
@@ -131,6 +134,46 @@ def add_task_page(task_service):
                 )
                 st.success(f"Task '{title}' added successfully with ID {task.id}")
 
+
+def user_dashboard_page(task_service):
+    """Display the user dashboard page showing tasks by user."""
+    st.header("User Dashboard")
+    
+    # Filter options
+    show_completed = st.checkbox("Show completed tasks", value=False)
+    
+    # Get tasks by user
+    user_tasks = task_service.get_tasks_by_user(show_completed=show_completed)
+    
+    if not user_tasks:
+        st.info("No tasks found.")
+        return
+    
+    # Display tasks by user
+    for user, tasks in user_tasks.items():
+        with st.expander(f"{user} ({len(tasks)} tasks)", expanded=True):
+            # Count open and closed tasks
+            open_tasks = [t for t in tasks if not t.completed]
+            closed_tasks = [t for t in tasks if t.completed]
+            
+            # Display summary metrics
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Open Tasks", len(open_tasks))
+            with col2:
+                st.metric("Completed Tasks", len(closed_tasks))
+            
+            # Display tasks in a table
+            if tasks:
+                task_data = {
+                    "ID": [t.id for t in tasks],
+                    "Title": [t.title for t in tasks],
+                    "Priority": [t.priority for t in tasks],
+                    "Status": ["Completed" if t.completed else "Open" for t in tasks]
+                }
+                st.dataframe(task_data)
+            else:
+                st.write("No tasks for this user.")
 
 def search_tasks_page(task_service):
     """Display the search tasks page."""

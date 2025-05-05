@@ -46,7 +46,7 @@ class TaskService:
         with open(self.storage_file, "w") as f:
             json.dump(task_dicts, f, indent=2)
 
-    def add_task(self, title: str, description: str = "", priority: str = "medium") -> Task:
+    def add_task(self, title: str, description: str = "", priority: str = "medium", assigned_to: str = "unassigned") -> Task:
         """
         Add a new task.
 
@@ -54,12 +54,13 @@ class TaskService:
             title: Task title
             description: Task description
             priority: Task priority (low, medium, high)
+            assigned_to: User assigned to the task
 
         Returns:
             The newly created Task
         """
         task_id = max([task.id for task in self.tasks], default=0) + 1
-        task = Task(task_id, title, description, priority)
+        task = Task(task_id, title, description, priority, assigned_to=assigned_to)
         self.tasks.append(task)
         self._save_tasks()
         return task
@@ -157,6 +158,26 @@ class TaskService:
         self._save_tasks()
         return task
 
+    def get_tasks_by_user(self, show_completed: bool = True) -> Dict[str, List[Task]]:
+        """
+        Group tasks by assigned user.
+
+        Args:
+            show_completed: Whether to include completed tasks
+
+        Returns:
+            Dictionary mapping users to their assigned tasks
+        """
+        tasks = self.get_all_tasks(show_completed) if show_completed else [t for t in self.tasks if not t.completed]
+        user_tasks = {}
+        
+        for task in tasks:
+            if task.assigned_to not in user_tasks:
+                user_tasks[task.assigned_to] = []
+            user_tasks[task.assigned_to].append(task)
+            
+        return user_tasks
+        
     def search_tasks(self, keyword: str) -> List[Task]:
         """
         Search for tasks containing the keyword.
