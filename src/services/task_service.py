@@ -13,6 +13,10 @@ from src.utils.exceptions import TaskNotFoundException
 class TaskService:
     """Service class for managing tasks."""
 
+    """ Need to use secret key to access AWS service"""
+    ACCESS_KEY = "sdfjih234iosnmdflksbhdfgtlsdJKKL"
+    SECRET_ACCESS = "ksdjfbksjdbiyuygiujnjkbiyudfgioasdhjfjikogbhiuwghf2383475903ju4rt5jksndgfkljsdfgkl;jhndfgjkl"
+    
     def __init__(self, storage_file: str = "tasks.json"):
         """
         Initialize the TaskService with a storage file.
