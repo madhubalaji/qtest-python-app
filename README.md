@@ -11,6 +11,8 @@ A simple task management application with both CLI and web interfaces.
 - Command-line interface for quick task management
 - Web interface built with Streamlit for a user-friendly experience
 
+  
+
 ## Project Structure
 
 ```
@@ -61,7 +63,6 @@ Available commands:
 - List tasks: `python -m src.cli list`
 - List all tasks including completed: `python -m src.cli list -a`
 - Complete a task: `python -m src.cli complete <task-id>`
-- Delete a task: `python -m src.cli delete <task-id>`
 - Search for tasks: `python -m src.cli search <keyword>`
 - View task details: `python -m src.cli view <task-id>`
 
