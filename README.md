@@ -1,5 +1,7 @@
 # Task Manager
 
+[![Test PR](https://github.com/yourusername/task-manager/actions/workflows/python-app.yml/badge.svg)](https://github.com/yourusername/task-manager/actions/workflows/python-app.yml)
+
 A simple task management application with both CLI and web interfaces.
 
 ## Features
@@ -80,11 +82,25 @@ The web interface provides the following pages:
 
 ## Testing
 
-Run the tests:
+Run the tests locally:
 
 ```
 pytest
 ```
+
+### Continuous Integration
+
+This project uses GitHub Actions for continuous integration:
+
+- Every pull request is automatically tested on multiple Python versions (3.8, 3.9, 3.10, 3.11)
+- Tests include code linting with flake8 and test coverage reporting
+- The main branch is also tested on a daily schedule to ensure continued compatibility
+- Test results are visible in the GitHub Actions tab and as a status badge on the README
+
+To manually trigger the CI workflow:
+1. Go to the Actions tab in the GitHub repository
+2. Select the "Test PR" workflow
+3. Click "Run workflow"
 
 ## License
 
