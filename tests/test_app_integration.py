@@ -37,7 +37,7 @@ class TestAppIntegration(unittest.TestCase):
         os.unlink(self.temp_file.name)
 
     @patch('streamlit.button')
-    @patch('streamlit.experimental_rerun')
+    @patch('streamlit.rerun')
     def test_delete_task_from_view_tasks(self, mock_rerun, mock_button):
         """Test deleting a task from the view tasks page."""
         # Mock the button click
@@ -59,7 +59,7 @@ class TestAppIntegration(unittest.TestCase):
             self.assertEqual(tasks[1].id, 3)
 
     @patch('streamlit.button')
-    @patch('streamlit.experimental_rerun')
+    @patch('streamlit.rerun')
     def test_delete_task_from_search_results(self, mock_rerun, mock_button):
         """Test deleting a task from the search results."""
         # Mock the button click
@@ -81,7 +81,7 @@ class TestAppIntegration(unittest.TestCase):
             self.assertEqual(tasks[1].id, 2)
 
     @patch('streamlit.button')
-    @patch('streamlit.experimental_rerun')
+    @patch('streamlit.rerun')
     def test_delete_task_from_task_details(self, mock_rerun, mock_button):
         """Test deleting a task from the task details view."""
         # Mock the button click

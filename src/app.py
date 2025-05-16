@@ -100,13 +100,13 @@ def display_tasks_page(task_service):
             with col3:
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                     task_service.complete_task(task.id)
-                    st.experimental_rerun()
+                    st.rerun()
             
             with col4:
                 if st.button("🗑️", key=f"delete_{task.id}"):
                     if st.session_state.get(f"confirm_delete_{task.id}", False):
                         task_service.delete_task(task.id)
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.session_state[f"confirm_delete_{task.id}"] = True
                         st.warning(f"Click the delete button again to confirm deletion of task '{task.title}'")
@@ -171,13 +171,13 @@ def search_tasks_page(task_service):
                     with col2:
                         if st.button("View", key=f"view_{task.id}"):
                             st.session_state.task_to_view = task.id
-                            st.experimental_rerun()
+                            st.rerun()
                     
                     with col3:
                         if st.button("🗑️", key=f"delete_search_{task.id}"):
                             if st.session_state.get(f"confirm_delete_search_{task.id}", False):
                                 task_service.delete_task(task.id)
-                                st.experimental_rerun()
+                                st.rerun()
                             else:
                                 st.session_state[f"confirm_delete_search_{task.id}"] = True
                                 st.warning(f"Click the delete button again to confirm deletion of task '{task.title}'")
@@ -201,14 +201,14 @@ def search_tasks_page(task_service):
             with col1:
                 if not task.completed and st.button("Mark as Complete"):
                     task_service.complete_task(task.id)
-                    st.experimental_rerun()
+                    st.rerun()
             
             with col2:
                 if st.button("Delete Task"):
                     if st.session_state.get(f"confirm_delete_view_{task.id}", False):
                         task_service.delete_task(task.id)
                         del st.session_state.task_to_view
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.session_state[f"confirm_delete_view_{task.id}"] = True
                         st.warning(f"Click the delete button again to confirm deletion of task '{task.title}'")
@@ -216,7 +216,7 @@ def search_tasks_page(task_service):
             with col3:
                 if st.button("Close"):
                     del st.session_state.task_to_view
-                    st.experimental_rerun()
+                    st.rerun()
                 
         except TaskNotFoundException:
             st.error("Task not found")
