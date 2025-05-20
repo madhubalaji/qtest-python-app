@@ -86,6 +86,24 @@ Run the tests:
 pytest
 ```
 
+For test coverage report:
+
+```
+pytest --cov=src --cov-report=term-missing
+```
+
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration and deployment. The workflow automatically:
+
+1. Runs on every push to `main` and `develop` branches and on pull requests
+2. Tests the code with multiple Python versions (3.8, 3.9, 3.10)
+3. Performs code linting with flake8
+4. Generates test coverage reports
+5. Builds the Python package
+
+You can view the workflow status in the GitHub Actions tab of the repository.
+
 ## License
 
 [MIT License](LICENSE)
