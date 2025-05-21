@@ -140,6 +140,13 @@ class TestTaskService(unittest.TestCase):
         self.assertEqual(tasks[0].id, 1)
         self.assertEqual(tasks[1].id, 3)
         
+        # Check that the task was deleted from the storage file
+        with open(self.temp_file.name, "r") as f:
+            saved_tasks = json.load(f)
+            self.assertEqual(len(saved_tasks), 2)
+            self.assertEqual(saved_tasks[0]["id"], 1)
+            self.assertEqual(saved_tasks[1]["id"], 3)
+        
         # Try to delete a non-existent task
         with self.assertRaises(TaskNotFoundException):
             self.task_service.delete_task(2)
