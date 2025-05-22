@@ -78,6 +78,32 @@ The web interface provides the following pages:
 - Add Task: Create new tasks
 - Search Tasks: Find tasks by keyword
 
+## Development
+
+This project includes a Makefile with several useful commands for development:
+
+```
+make help           # Show available commands
+make test           # Run tests
+make test-cov       # Run tests with coverage report
+make lint           # Run linting
+make build          # Build the package
+make install        # Install the package in development mode
+make clean          # Clean build artifacts
+```
+
+### Pre-push Hook
+
+A pre-push hook script is provided to run tests before pushing changes. To use it:
+
+1. Copy the script to your local Git hooks directory:
+   ```
+   cp pre-push.sh .git/hooks/pre-push
+   chmod +x .git/hooks/pre-push
+   ```
+
+2. Now tests will run automatically before each push, preventing pushes if tests fail.
+
 ## Testing
 
 Run the tests:
@@ -85,6 +111,37 @@ Run the tests:
 ```
 pytest
 ```
+
+To run tests with coverage report:
+
+```
+pytest --cov=src
+```
+
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration. The workflow automatically runs on push to main, develop, feature/*, and release/* branches, as well as on pull requests to main and develop.
+
+The CI workflow performs the following tasks:
+- Installs dependencies
+- Runs linting with flake8
+- Runs tests with pytest
+- Generates test coverage reports
+- Builds the Python package
+- Verifies the package installation
+
+You can view the workflow configuration in `.github/workflows/python-app.yml`.
+
+### Running CI Locally
+
+You can run the CI workflow locally to test your changes before pushing:
+
+```
+chmod +x run_ci_locally.sh
+./run_ci_locally.sh
+```
+
+This script will run the same steps as the GitHub Actions workflow.
 
 ## License
 
