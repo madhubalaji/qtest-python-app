@@ -104,7 +104,7 @@ def display_tasks_page(task_service):
                         task_service.complete_task(task.id)
                         st.experimental_rerun()
                 with col3_2:
-                    if st.button("🗑️ Delete", key=f"delete_{task.id}"):
+                    if st.button("🗑️", key=f"delete_{task.id}"):
                         task_service.delete_task(task.id)
                         st.experimental_rerun()
             
@@ -172,7 +172,7 @@ def search_tasks_page(task_service):
                                 st.session_state.task_to_view = task.id
                                 st.experimental_rerun()
                         with col2_2:
-                            if st.button("🗑️ Delete", key=f"delete_search_{task.id}"):
+                            if st.button("🗑️", key=f"delete_search_{task.id}"):
                                 task_service.delete_task(task.id)
                                 st.experimental_rerun()
                     
@@ -198,7 +198,7 @@ def search_tasks_page(task_service):
                     st.experimental_rerun()
             
             with col2:
-                if st.button("🗑️ Delete Task"):
+                if st.button("Delete", key=f"delete_detail_{task.id}"):
                     task_service.delete_task(task.id)
                     del st.session_state.task_to_view
                     st.experimental_rerun()
