@@ -104,17 +104,9 @@ def display_tasks_page(task_service):
                         task_service.complete_task(task.id)
                         st.experimental_rerun()
                 with col3_2:
-                    if st.button("🗑️", key=f"delete_{task.id}", help="Delete task"):
-                        if st.session_state.get(f"confirm_delete_{task.id}", False):
-                            # Delete confirmed
-                            task_service.delete_task(task.id)
-                            st.success(f"Task '{task.title}' deleted successfully.")
-                            st.session_state[f"confirm_delete_{task.id}"] = False
-                            st.experimental_rerun()
-                        else:
-                            # Ask for confirmation
-                            st.session_state[f"confirm_delete_{task.id}"] = True
-                            st.warning(f"Click the delete button again to confirm deletion of '{task.title}'")
+                    if st.button("🗑️ Delete", key=f"delete_{task.id}"):
+                        task_service.delete_task(task.id)
+                        st.experimental_rerun()
             
             st.divider()
 
@@ -200,18 +192,11 @@ def search_tasks_page(task_service):
                     st.experimental_rerun()
             
             with col2:
-                if st.button("Delete Task"):
-                    if st.session_state.get(f"confirm_detail_delete_{task.id}", False):
-                        # Delete confirmed
-                        task_service.delete_task(task.id)
-                        st.success(f"Task '{task.title}' deleted successfully.")
+                if st.button("🗑️ Delete"):
+                    task_service.delete_task(task.id)
+                    if hasattr(st.session_state, 'task_to_view'):
                         del st.session_state.task_to_view
-                        st.session_state[f"confirm_detail_delete_{task.id}"] = False
-                        st.experimental_rerun()
-                    else:
-                        # Ask for confirmation
-                        st.session_state[f"confirm_detail_delete_{task.id}"] = True
-                        st.warning(f"Click the delete button again to confirm deletion")
+                    st.experimental_rerun()
             
             with col3:
                 if st.button("Close"):
