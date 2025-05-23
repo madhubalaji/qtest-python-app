@@ -98,12 +98,12 @@ def display_tasks_page(task_service):
                 )
             
             with col3:
-                col3_1, col3_2 = st.columns(2)
-                with col3_1:
+                action_cols = st.columns([1, 1])
+                with action_cols[0]:
                     if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                         task_service.complete_task(task.id)
                         st.rerun()
-                with col3_2:
+                with action_cols[1]:
                     if st.button("🗑️", key=f"delete_{task.id}"):
                         task_service.delete_task(task.id)
                         st.success(f"Task '{task.title}' deleted successfully.")

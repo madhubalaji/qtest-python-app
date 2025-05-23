@@ -12,7 +12,6 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.services.task_service import TaskService
-from src.models.task import Task
 
 
 class TestAppFunctions(unittest.TestCase):
@@ -35,76 +34,122 @@ class TestAppFunctions(unittest.TestCase):
         # Remove the temporary file
         os.unlink(self.temp_file.name)
 
-    @patch('streamlit.button')
-    @patch('streamlit.success')
+    @patch('streamlit.container')
+    @patch('streamlit.expander')
+    @patch('streamlit.write')
+    @patch('streamlit.markdown')
+    @patch('streamlit.info')
+    @patch('streamlit.selectbox')
+    @patch('streamlit.checkbox')
+    @patch('streamlit.header')
     @patch('streamlit.rerun')
-    def test_delete_task_button(self, mock_rerun, mock_success, mock_button):
+    @patch('streamlit.success')
+    @patch('streamlit.button')
+    def test_delete_task_button(self, mock_button, mock_success, mock_rerun, mock_header,
+                             mock_checkbox, mock_selectbox, mock_info, mock_markdown,
+                             mock_write, mock_expander, mock_container):
         """Test that clicking the delete button deletes the task."""
         # Import here to avoid Streamlit initialization during test collection
         from src.app import display_tasks_page
         
-        # Mock the button click
-        mock_button.return_value = True
-        
-        # Call the function with our task service
+        # Setup default mock returns
+        mock_checkbox.return_value = False
+        mock_selectbox.return_value = "All"
+        mock_container.return_value.__enter__.return_value = MagicMock()
+        mock_container.return_value.__exit__.return_value = None
+        mock_expander.return_value.__enter__.return_value = MagicMock()
+        mock_expander.return_value.__exit__.return_value = None
+
+        # Mock the columns
         with patch('streamlit.columns') as mock_columns:
-            # Mock the columns structure
+            # Mock column objects
             mock_col1 = MagicMock()
             mock_col2 = MagicMock()
             mock_col3 = MagicMock()
-            mock_col3_1 = MagicMock()
-            mock_col3_2 = MagicMock()
-            
-            mock_columns.return_value = [mock_col1, mock_col2, mock_col3]
-            mock_col3.columns.return_value = [mock_col3_1, mock_col3_2]
-            
-            # This will simulate clicking the delete button
+            mock_action_col1 = MagicMock()
+            mock_action_col2 = MagicMock()
+
+            def column_side_effect(*args):
+                if not args:
+                    return [mock_col1, mock_col2]
+                if args[0] == 3 or args[0] == [3, 1, 1]:
+                    return [mock_col1, mock_col2, mock_col3]
+                if args[0] == 2:
+                    return [mock_action_col1, mock_action_col2]
+                return [mock_col1, mock_col2]
+
+            mock_columns.side_effect = column_side_effect
+
+            # Mock button behavior
+            def button_side_effect(*args, **kwargs):
+                if 'key' in kwargs and kwargs['key'].startswith('delete_'):
+                    return True
+                return False
+
+            mock_button.side_effect = button_side_effect
+
+            # Run the function
             display_tasks_page(self.task_service)
-            
-            # Check that the success message was shown
+
+            # Verify the results
             mock_success.assert_called_once()
-            
-            # Check that the page was rerun
             mock_rerun.assert_called_once()
-            
-            # Check that the task was deleted
             tasks = self.task_service.get_all_tasks()
             self.assertEqual(len(tasks), 2)  # One task should be deleted
 
-    @patch('streamlit.button')
-    @patch('streamlit.success')
+    @patch('streamlit.container')
+    @patch('streamlit.write')
+    @patch('streamlit.markdown')
+    @patch('streamlit.text_input')
+    @patch('streamlit.header')
     @patch('streamlit.rerun')
-    def test_delete_task_in_search_view(self, mock_rerun, mock_success, mock_button):
+    @patch('streamlit.success')
+    @patch('streamlit.button')
+    @patch('streamlit.subheader')
+    def test_delete_task_in_search_view(self, mock_subheader, mock_button, mock_success, mock_rerun,
+                                    mock_header, mock_text_input, mock_markdown,
+                                    mock_write, mock_container):
         """Test that clicking the delete button in search view deletes the task."""
         # Import here to avoid Streamlit initialization during test collection
         from src.app import search_tasks_page
-        
-        # Mock the button click for "Delete Task"
-        mock_button.return_value = True
-        
-        # Set up session state with a task to view
+
+        # Setup container mock
+        mock_container.return_value.__enter__.return_value = MagicMock()
+        mock_container.return_value.__exit__.return_value = None
+
+        # Set up the session state
         import streamlit as st
         st.session_state = {}
         st.session_state["task_to_view"] = self.task1.id
-        
-        # Call the function with our task service
+
+        # Mock the columns
         with patch('streamlit.columns') as mock_columns:
-            # Mock the columns structure
+            # Mock column objects
             mock_col1 = MagicMock()
             mock_col2 = MagicMock()
-            
-            mock_columns.return_value = [mock_col1, mock_col2, MagicMock()]
-            
-            # This will simulate clicking the delete button
+            mock_col3 = MagicMock()
+
+            def column_side_effect(*args):
+                if args[0] == 3:
+                    return [mock_col1, mock_col2, mock_col3]
+                return [mock_col1, mock_col2]
+
+            mock_columns.side_effect = column_side_effect
+
+            # Mock button behavior
+            def button_side_effect(*args, **kwargs):
+                if args and args[0] == "Delete Task":
+                    return True
+                return False
+
+            mock_button.side_effect = button_side_effect
+
+            # Run the function
             search_tasks_page(self.task_service)
-            
-            # Check that the success message was shown
+
+            # Verify the results
             mock_success.assert_called_once()
-            
-            # Check that the page was rerun
             mock_rerun.assert_called_once()
-            
-            # Check that the task was deleted
             tasks = self.task_service.get_all_tasks()
             self.assertEqual(len(tasks), 2)  # One task should be deleted
 
