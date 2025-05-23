@@ -84,9 +84,8 @@ class TestAppFunctions(unittest.TestCase):
         
         # Set up session state with a task to view
         import streamlit as st
-        if not hasattr(st, 'session_state'):
-            st.session_state = {}
-        st.session_state.task_to_view = self.task1.id
+        st.session_state = {}
+        st.session_state["task_to_view"] = self.task1.id
         
         # Call the function with our task service
         with patch('streamlit.columns') as mock_columns:
@@ -94,7 +93,7 @@ class TestAppFunctions(unittest.TestCase):
             mock_col1 = MagicMock()
             mock_col2 = MagicMock()
             
-            mock_columns.return_value = [mock_col1, mock_col2]
+            mock_columns.return_value = [mock_col1, mock_col2, MagicMock()]
             
             # This will simulate clicking the delete button
             search_tasks_page(self.task_service)

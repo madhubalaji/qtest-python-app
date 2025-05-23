@@ -47,10 +47,10 @@ def display_tasks_page(task_service):
     st.header("Your Tasks")
     
     # Filter options
-    col1, col2 = st.columns(2)
-    with col1:
+    cols = st.columns(3)
+    with cols[0]:
         show_completed = st.checkbox("Show completed tasks", value=False)
-    with col2:
+    with cols[1]:
         filter_priority = st.selectbox(
             "Filter by priority",
             ["All", "Low", "Medium", "High"]
@@ -185,23 +185,26 @@ def search_tasks_page(task_service):
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
             
-            col1, col2 = st.columns(2)
+            cols = st.columns(3)
             
-            with col1:
+            with cols[0]:
                 if not task.completed and st.button("Mark as Complete"):
                     task_service.complete_task(task.id)
                     st.rerun()
             
-            with col2:
+            with cols[1]:
                 if st.button("Delete Task"):
                     task_service.delete_task(task.id)
                     st.success(f"Task '{task.title}' deleted successfully.")
-                    del st.session_state.task_to_view
+                    if "task_to_view" in st.session_state:
+                        del st.session_state["task_to_view"]
                     st.rerun()
-                
-            if st.button("Close"):
-                del st.session_state.task_to_view
-                st.rerun()
+            
+            with cols[2]:
+                if st.button("Close"):
+                    if "task_to_view" in st.session_state:
+                        del st.session_state["task_to_view"]
+                    st.rerun()
                 
         except TaskNotFoundException:
             st.error("Task not found")
