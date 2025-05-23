@@ -37,7 +37,7 @@ class TestAppFunctions(unittest.TestCase):
 
     @patch('streamlit.button')
     @patch('streamlit.success')
-    @patch('streamlit.experimental_rerun')
+    @patch('streamlit.rerun')
     def test_delete_task_button(self, mock_rerun, mock_success, mock_button):
         """Test that clicking the delete button deletes the task."""
         # Import here to avoid Streamlit initialization during test collection
@@ -73,7 +73,7 @@ class TestAppFunctions(unittest.TestCase):
 
     @patch('streamlit.button')
     @patch('streamlit.success')
-    @patch('streamlit.experimental_rerun')
+    @patch('streamlit.rerun')
     def test_delete_task_in_search_view(self, mock_rerun, mock_success, mock_button):
         """Test that clicking the delete button in search view deletes the task."""
         # Import here to avoid Streamlit initialization during test collection
