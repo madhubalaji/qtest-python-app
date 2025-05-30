@@ -17,6 +17,17 @@ A simple task management application with both CLI and web interfaces.
 task_manager_project/
 ├── config/                 # Configuration files and task storage
 ├── docs/                   # Documentation
+│   ├── index.md            # Main documentation page
+│   ├── installation.md     # Installation instructions
+│   ├── usage/              # Usage guides
+│   │   ├── cli.md          # CLI usage guide
+│   │   └── web.md          # Web interface usage guide
+│   ├── api/                # API reference
+│   │   ├── models.md       # Models documentation
+│   │   ├── services.md     # Services documentation
+│   │   └── utils.md        # Utilities documentation
+│   ├── development.md      # Development guide
+│   └── contributing.md     # Contributing guidelines
 ├── src/                    # Source code
 │   ├── models/             # Data models
 │   │   └── task.py         # Task model
@@ -45,6 +56,8 @@ task_manager_project/
    pip install -r requirements.txt
    ```
 
+For detailed installation instructions, see the [Installation Guide](docs/installation.md).
+
 ## Usage
 
 ### Command-line Interface
@@ -65,6 +78,8 @@ Available commands:
 - Search for tasks: `python -m src.cli search <keyword>`
 - View task details: `python -m src.cli view <task-id>`
 
+For detailed CLI usage instructions, see the [CLI Documentation](docs/usage/cli.md).
+
 ### Web Interface
 
 Run the Streamlit web application:
@@ -78,6 +93,24 @@ The web interface provides the following pages:
 - Add Task: Create new tasks
 - Search Tasks: Find tasks by keyword
 
+For detailed web interface usage instructions, see the [Web Interface Documentation](docs/usage/web.md).
+
+## Documentation
+
+Comprehensive documentation is available in the `docs` directory:
+
+- [Main Documentation](docs/index.md): Overview and quick start guide
+- [Installation Guide](docs/installation.md): Detailed installation instructions
+- Usage Guides:
+  - [Command-line Interface](docs/usage/cli.md): How to use the CLI
+  - [Web Interface](docs/usage/web.md): How to use the web interface
+- API Reference:
+  - [Models](docs/api/models.md): Documentation for data models
+  - [Services](docs/api/services.md): Documentation for services
+  - [Utilities](docs/api/utils.md): Documentation for utilities
+- [Development Guide](docs/development.md): Guide for developers
+- [Contributing Guidelines](docs/contributing.md): Guidelines for contributing to the project
+
 ## Testing
 
 Run the tests:
@@ -85,6 +118,10 @@ Run the tests:
 ```
 pytest
 ```
+
+## Contributing
+
+Contributions are welcome! Please see the [Contributing Guidelines](docs/contributing.md) for more information.
 
 ## License
 
