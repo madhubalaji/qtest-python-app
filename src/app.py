@@ -73,7 +73,7 @@ def display_tasks_page(task_service):
     # Display tasks
     for task in tasks:
         with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
+            col1, col2, col3, col4 = st.columns([3, 1, 0.7, 0.7])
             
             with col1:
                 if task.completed:
@@ -100,6 +100,11 @@ def display_tasks_page(task_service):
             with col3:
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                     task_service.complete_task(task.id)
+                    st.experimental_rerun()
+            
+            with col4:
+                if st.button("🗑️", key=f"delete_{task.id}"):
+                    task_service.delete_task(task.id)
                     st.experimental_rerun()
             
             st.divider()
@@ -178,7 +183,7 @@ def search_tasks_page(task_service):
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
             
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 if not task.completed and st.button("Mark as Complete"):
@@ -186,6 +191,12 @@ def search_tasks_page(task_service):
                     st.experimental_rerun()
             
             with col2:
+                if st.button("Delete Task"):
+                    task_service.delete_task(task.id)
+                    del st.session_state.task_to_view
+                    st.experimental_rerun()
+            
+            with col3:
                 if st.button("Close"):
                     del st.session_state.task_to_view
                     st.experimental_rerun()
