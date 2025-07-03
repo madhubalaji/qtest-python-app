@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "task-manager"
+version = "0.1.0"
+description = "A simple task management application"
+readme = "README.md"
+requires-python = ">=3.6"
+dependencies = [
+    "streamlit>=1.22.0",
+    "pytest>=7.3.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
