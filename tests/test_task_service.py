@@ -1,6 +1,7 @@
 import pytest
 from src.services.task_service import TaskService
 from src.models.task import Task
+from src.utils.exceptions import TaskNotFoundException
 
 @pytest.fixture
 def task_service():
