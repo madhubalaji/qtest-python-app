@@ -2,15 +2,14 @@
 Streamlit web application for the task manager.
 """
 
+from src.services.task_service import TaskService
+from src.utils.exceptions import TaskNotFoundException
 import os
 import sys
 import streamlit as st
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.services.task_service import TaskService
-from src.utils.exceptions import TaskNotFoundException
 
 
 def main():
