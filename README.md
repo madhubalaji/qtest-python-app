@@ -78,13 +78,64 @@ The web interface provides the following pages:
 - Add Task: Create new tasks
 - Search Tasks: Find tasks by keyword
 
-## Testing
+## Development
+
+### Setting up the development environment
+
+1. Clone the repository:
+   ```
+   git clone <repository-url>
+   cd task_manager_project
+   ```
+
+2. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+3. Set up git hooks:
+   ```
+   chmod +x scripts/setup_hooks.sh
+   ./scripts/setup_hooks.sh
+   ```
+
+### Running tests
 
 Run the tests:
 
 ```
 pytest
 ```
+
+Run tests with coverage:
+
+```
+chmod +x scripts/run_tests.sh
+./scripts/run_tests.sh
+```
+
+### Building the package
+
+Build the Python package:
+
+```
+chmod +x scripts/build_package.sh
+./scripts/build_package.sh
+```
+
+## Continuous Integration/Continuous Deployment
+
+This project uses GitHub Actions for CI/CD. The workflow automatically:
+
+1. Runs linting checks with flake8
+2. Executes all tests with pytest
+3. Generates code coverage reports
+4. Builds the Python package
+5. (When configured) Deploys the package to PyPI
+
+The workflow is triggered on:
+- Push to main and develop branches
+- Pull requests to main and develop branches
 
 ## License
 
