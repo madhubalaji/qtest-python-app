@@ -99,7 +99,27 @@ def display_tasks_page(task_service):
             
             with col3:
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
-                    task_service.complete_task(task.id)
+with col3:
+                if not task.completed and st.button("✓", key=f"complete_{task.id}"):
+                    try:
+                        task_service.complete_task(task.id)
+                        st.experimental_rerun()
+                    except Exception as e:
+                        st.error(f"Error completing task: {str(e)}")
+            
+            with col4:
+                if st.button("🗑️", key=f"delete_{task.id}"):
+                    if st.session_state.delete_confirmation == task.id:
+                        # User confirmed deletion
+                        try:
+                            task_service.delete_task(task.id)
+                            st.session_state.delete_confirmation = None
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.error(f"Error deleting task: {str(e)}")
+                    else:
+                        # Ask for confirmation
+                        st.session_state.delete_confirmation = task.id
                     st.experimental_rerun()
             
             with col4:
