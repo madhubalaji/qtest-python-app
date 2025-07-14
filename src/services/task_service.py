@@ -4,7 +4,7 @@ Task service for managing task operations.
 
 import os
 import json
-from typing import List, Dict, Any, Optional
+from typing import List
 
 from src.models.task import Task
 from src.utils.exceptions import TaskNotFoundException
@@ -38,7 +38,7 @@ class TaskService:
                     tasks = [Task.from_dict(task_dict) for task_dict in task_dicts]
             except json.JSONDecodeError:
                 print(f"Error reading task file. Starting with empty task list.")
-        return tasks
+        return tasks  # No f-string used here
 
     def _save_tasks(self) -> None:
         """Save tasks to the storage file."""
