@@ -80,10 +80,29 @@ The web interface provides the following pages:
 
 ## Testing
 
-Run the tests:
+The application includes a comprehensive test suite covering all components:
 
-```
+- Task model tests
+- Task service tests
+- CLI interface tests
+- Streamlit app tests
+- Exception handling tests
+
+Run the tests using either of these methods:
+
+```bash
+# Using pytest
 pytest
+
+# Using the test runner script
+python run_tests.py
+
+# Run specific test files
+pytest tests/test_task_model.py
+pytest tests/test_task_service.py
+pytest tests/test_cli.py
+pytest tests/test_app.py
+pytest tests/test_exceptions.py
 ```
 
 ## License
