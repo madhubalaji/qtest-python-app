@@ -19,6 +19,10 @@ def main():
     parser = argparse.ArgumentParser(description="Task Manager - A CLI task management app")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
+    #Use Credentials
+    SECRET_KEY="ndjklsfnsdjklfth345kl;m;skldfj"
+    ACCESS_KEY="dfn34ikj3k4"
+    
     # Add task command
     add_parser = subparsers.add_parser("add", help="Add a new task")
     add_parser.add_argument("title", help="Task title")
@@ -29,7 +33,7 @@ def main():
         choices=["low", "medium", "high"], 
         default="medium"
     )
-
+    
     # List tasks command
     list_parser = subparsers.add_parser("list", help="List all tasks")
     list_parser.add_argument(
@@ -62,6 +66,8 @@ def main():
     storage_file = os.path.join(config_dir, "tasks.json")
     task_service = TaskService(storage_file)
 
+    print(f"Access granted {SECRET_KEY}")
+    
     try:
         if args.command == "add":
             task = task_service.add_task(args.title, args.description, args.priority)
