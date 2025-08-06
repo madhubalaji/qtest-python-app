@@ -73,7 +73,7 @@ def display_tasks_page(task_service):
     # Display tasks
     for task in tasks:
         with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
             
             with col1:
                 if task.completed:
@@ -101,6 +101,38 @@ def display_tasks_page(task_service):
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                     task_service.complete_task(task.id)
                     st.experimental_rerun()
+            
+            with col4:
+                # Check if we're in confirmation mode for this task
+                confirm_key = f"confirm_delete_{task.id}"
+                if st.session_state.get(confirm_key, False):
+                    # Show confirmation buttons
+                    col4a, col4b = st.columns(2)
+                    with col4a:
+                        if st.button("Yes", key=f"confirm_yes_{task.id}"):
+                            try:
+                                task_service.delete_task(task.id)
+                                # Clear confirmation state
+                                if confirm_key in st.session_state:
+                                    del st.session_state[confirm_key]
+                                st.success(f"Task '{task.title}' deleted successfully")
+                                st.experimental_rerun()
+                            except TaskNotFoundException:
+                                st.error("Task not found")
+                                if confirm_key in st.session_state:
+                                    del st.session_state[confirm_key]
+                    with col4b:
+                        if st.button("No", key=f"confirm_no_{task.id}"):
+                            # Clear confirmation state
+                            if confirm_key in st.session_state:
+                                del st.session_state[confirm_key]
+                            st.experimental_rerun()
+                else:
+                    # Show delete button
+                    if st.button("🗑️", key=f"delete_{task.id}", help="Delete task"):
+                        # Set confirmation state
+                        st.session_state[confirm_key] = True
+                        st.experimental_rerun()
             
             st.divider()
 
@@ -178,7 +210,7 @@ def search_tasks_page(task_service):
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
             
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 if not task.completed and st.button("Mark as Complete"):
@@ -186,6 +218,44 @@ def search_tasks_page(task_service):
                     st.experimental_rerun()
             
             with col2:
+                # Check if we're in confirmation mode for this task
+                confirm_key = f"confirm_delete_detail_{task.id}"
+                if st.session_state.get(confirm_key, False):
+                    # Show confirmation message and buttons
+                    st.warning("Delete this task?")
+                    col2a, col2b = st.columns(2)
+                    with col2a:
+                        if st.button("Yes", key=f"confirm_detail_yes_{task.id}"):
+                            try:
+                                task_service.delete_task(task.id)
+                                # Clear confirmation state and task view
+                                if confirm_key in st.session_state:
+                                    del st.session_state[confirm_key]
+                                if hasattr(st.session_state, 'task_to_view'):
+                                    del st.session_state.task_to_view
+                                st.success(f"Task '{task.title}' deleted successfully")
+                                st.experimental_rerun()
+                            except TaskNotFoundException:
+                                st.error("Task not found")
+                                if confirm_key in st.session_state:
+                                    del st.session_state[confirm_key]
+                                if hasattr(st.session_state, 'task_to_view'):
+                                    del st.session_state.task_to_view
+                                st.experimental_rerun()
+                    with col2b:
+                        if st.button("No", key=f"confirm_detail_no_{task.id}"):
+                            # Clear confirmation state
+                            if confirm_key in st.session_state:
+                                del st.session_state[confirm_key]
+                            st.experimental_rerun()
+                else:
+                    # Show delete button
+                    if st.button("🗑️ Delete", key=f"delete_detail_{task.id}"):
+                        # Set confirmation state
+                        st.session_state[confirm_key] = True
+                        st.experimental_rerun()
+            
+            with col3:
                 if st.button("Close"):
                     del st.session_state.task_to_view
                     st.experimental_rerun()
