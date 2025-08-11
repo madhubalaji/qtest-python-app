@@ -86,6 +86,66 @@ Run the tests:
 pytest
 ```
 
+Run tests with coverage:
+
+```
+pytest --cov=src --cov-report=html
+```
+
+## Code Quality
+
+This project uses several tools to maintain code quality:
+
+- **Black**: Code formatting
+- **isort**: Import sorting
+- **flake8**: Linting
+- **pytest**: Testing with coverage
+
+To run all quality checks locally:
+
+```bash
+# Format code
+black .
+isort .
+
+# Check formatting (without making changes)
+black --check .
+isort --check-only .
+
+# Lint code
+flake8 .
+
+# Run tests with coverage
+pytest --cov=src --cov-report=term-missing
+```
+
+## CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and deployment. The pipeline includes:
+
+### Test Job
+- **Multi-version testing**: Tests run on Python 3.8, 3.9, 3.10, 3.11, and 3.12
+- **Code quality checks**: Black formatting, isort import sorting, and flake8 linting
+- **Test coverage**: Comprehensive test coverage with reporting
+- **Dependency caching**: Pip dependencies are cached for faster builds
+
+### Build Job
+- **Package building**: Creates distributable packages
+- **Package validation**: Validates package integrity with twine
+- **Artifact upload**: Stores build artifacts for potential deployment
+- **Conditional execution**: Only runs on main branch after successful tests
+
+### Workflow Triggers
+- **Push events**: Triggers on pushes to any branch
+- **Pull requests**: Triggers on pull requests to any branch
+- **Manual dispatch**: Can be triggered manually from GitHub interface
+
+The workflow ensures that:
+1. All code changes are properly tested across multiple Python versions
+2. Code style and quality standards are maintained
+3. Test coverage is tracked and reported
+4. Packages can be built successfully before deployment
+
 ## License
 
 [MIT License](LICENSE)

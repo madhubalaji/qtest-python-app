@@ -37,7 +37,7 @@ class TaskService:
                     task_dicts = json.load(f)
                     tasks = [Task.from_dict(task_dict) for task_dict in task_dicts]
             except json.JSONDecodeError:
-                print(f"Error reading task file. Starting with empty task list.")
+                print("Error reading task file. Starting with empty task list.")
         return tasks
 
     def _save_tasks(self) -> None:
@@ -46,7 +46,9 @@ class TaskService:
         with open(self.storage_file, "w") as f:
             json.dump(task_dicts, f, indent=2)
 
-    def add_task(self, title: str, description: str = "", priority: str = "medium") -> Task:
+    def add_task(
+        self, title: str, description: str = "", priority: str = "medium"
+    ) -> Task:
         """
         Add a new task.
 
@@ -111,7 +113,7 @@ class TaskService:
             TaskNotFoundException: If no task with the given ID exists
         """
         task = self.get_task_by_id(task_id)
-        
+
         if "title" in kwargs:
             task.title = kwargs["title"]
         if "description" in kwargs:
@@ -120,7 +122,7 @@ class TaskService:
             task.priority = kwargs["priority"]
         if "completed" in kwargs:
             task.completed = kwargs["completed"]
-            
+
         self._save_tasks()
         return task
 
@@ -169,6 +171,7 @@ class TaskService:
         """
         keyword = keyword.lower()
         return [
-            task for task in self.tasks
+            task
+            for task in self.tasks
             if keyword in task.title.lower() or keyword in task.description.lower()
         ]
