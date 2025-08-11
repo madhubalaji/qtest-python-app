@@ -36,19 +36,19 @@ class TestExceptions:
     def test_task_not_found_exception_can_be_raised(self):
         """Test that TaskNotFoundException can be raised and caught."""
         with pytest.raises(TaskNotFoundException) as exc_info:
-            raise TaskNotFoundException("Task with ID 123 not found")
+            raise TaskNotFoundException("Task with ID 1 not found")
         
-        assert "Task with ID 123 not found" in str(exc_info.value)
+        assert str(exc_info.value) == "Task with ID 1 not found"
 
     def test_invalid_task_data_exception_can_be_raised(self):
         """Test that InvalidTaskDataException can be raised and caught."""
         with pytest.raises(InvalidTaskDataException) as exc_info:
             raise InvalidTaskDataException("Title cannot be empty")
         
-        assert "Title cannot be empty" in str(exc_info.value)
+        assert str(exc_info.value) == "Title cannot be empty"
 
     def test_exceptions_can_be_caught_as_base_exception(self):
-        """Test that custom exceptions can be caught as TaskManagerException."""
+        """Test that specific exceptions can be caught as base TaskManagerException."""
         with pytest.raises(TaskManagerException):
             raise TaskNotFoundException("Test")
         
@@ -56,7 +56,7 @@ class TestExceptions:
             raise InvalidTaskDataException("Test")
 
     def test_exception_without_message(self):
-        """Test creating exceptions without a message."""
+        """Test exceptions without custom messages."""
         exception1 = TaskNotFoundException()
         exception2 = InvalidTaskDataException()
         exception3 = TaskManagerException()

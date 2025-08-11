@@ -2,6 +2,11 @@
 
 A simple task management application with both CLI and web interfaces.
 
+[![CI/CD Pipeline](https://github.com/yourusername/task-manager/actions/workflows/python-app.yml/badge.svg)](https://github.com/yourusername/task-manager/actions/workflows/python-app.yml)
+[![codecov](https://codecov.io/gh/yourusername/task-manager/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/task-manager)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 ## Features
 
 - Add, view, update the tasks
@@ -15,8 +20,10 @@ A simple task management application with both CLI and web interfaces.
 
 ```
 task_manager_project/
+├── .github/                # GitHub Actions workflows
+│   └── workflows/
+│       └── python-app.yml  # CI/CD pipeline
 ├── config/                 # Configuration files and task storage
-├── docs/                   # Documentation
 ├── src/                    # Source code
 │   ├── models/             # Data models
 │   │   └── task.py         # Task model
@@ -28,48 +35,74 @@ task_manager_project/
 │   └── cli.py              # Command-line interface
 ├── tests/                  # Test cases
 │   ├── test_task_model.py  # Tests for Task model
-│   └── test_task_service.py# Tests for TaskService
-└── requirements.txt        # Project dependencies
+│   ├── test_task_service.py# Tests for TaskService
+│   ├── test_cli.py         # Tests for CLI interface
+│   └── test_exceptions.py  # Tests for custom exceptions
+├── requirements.txt        # Project dependencies
+├── pyproject.toml          # Project configuration
+├── pytest.ini             # Test configuration
+└── setup.py               # Package setup
 ```
 
 ## Installation
 
+### For Users
+
 1. Clone the repository:
-   ```
+   ```bash
    git clone <repository-url>
    cd task_manager_project
    ```
 
-2. Install dependencies:
+2. Install the package:
+   ```bash
+   pip install .
    ```
-   pip install -r requirements.txt
+
+### For Development
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd task_manager_project
+   ```
+
+2. Install in development mode with dev dependencies:
+   ```bash
+   pip install -e ".[dev]"
    ```
 
 ## Usage
 
 ### Command-line Interface
 
-Run the CLI application:
+After installation, you can use the CLI directly:
 
+```bash
+task-manager --help
 ```
+
+Or run it as a module:
+
+```bash
 python -m src.cli
 ```
 
 Available commands:
 
-- Add a task: `python -m src.cli add "Task title" -d "Task description" -p high`
-- List tasks: `python -m src.cli list`
-- List all tasks including completed: `python -m src.cli list -a`
-- Complete a task: `python -m src.cli complete <task-id>`
-- Delete a task: `python -m src.cli delete <task-id>`
-- Search for tasks: `python -m src.cli search <keyword>`
-- View task details: `python -m src.cli view <task-id>`
+- Add a task: `task-manager add "Task title" -d "Task description" -p high`
+- List tasks: `task-manager list`
+- List all tasks including completed: `task-manager list -a`
+- Complete a task: `task-manager complete <task-id>`
+- Delete a task: `task-manager delete <task-id>`
+- Search for tasks: `task-manager search <keyword>`
+- View task details: `task-manager view <task-id>`
 
 ### Web Interface
 
 Run the Streamlit web application:
 
-```
+```bash
 streamlit run src/app.py
 ```
 
@@ -78,69 +111,126 @@ The web interface provides the following pages:
 - Add Task: Create new tasks
 - Search Tasks: Find tasks by keyword
 
-## Testing
+## Development
 
-The project includes comprehensive unit and integration tests.
+### Testing
 
-### Running Tests Locally
+Run the full test suite:
 
-Run all tests:
 ```bash
 pytest
 ```
 
 Run tests with coverage:
+
 ```bash
-pytest --cov=src --cov-report=html --cov-report=term
+pytest --cov=src --cov-report=html
 ```
 
 Run specific test files:
+
 ```bash
 pytest tests/test_task_model.py
 pytest tests/test_task_service.py
-pytest tests/test_integration.py
+pytest tests/test_cli.py
 ```
 
-### Test Structure
+### Code Quality
 
-- `tests/test_task_model.py` - Unit tests for the Task model
-- `tests/test_task_service.py` - Unit tests for the TaskService class
-- `tests/test_integration.py` - Integration tests for complete workflows
-- `tests/conftest.py` - Shared test configuration and fixtures
+Format code with Black:
+
+```bash
+black src/ tests/
+```
+
+Sort imports with isort:
+
+```bash
+isort src/ tests/
+```
+
+Lint with flake8:
+
+```bash
+flake8 src/ tests/
+```
+
+Security analysis with Bandit:
+
+```bash
+bandit -r src/
+```
+
+Check for dependency vulnerabilities:
+
+```bash
+safety check
+```
 
 ### CI/CD Pipeline
 
-The project uses GitHub Actions for continuous integration and deployment:
+This project uses GitHub Actions for continuous integration and deployment. The pipeline includes:
 
-#### Workflow Features
+#### Code Quality & Security
+- Code formatting checks (Black)
+- Import sorting checks (isort)
+- Linting (flake8)
+- Security analysis (Bandit)
+- Dependency vulnerability scanning (Safety)
+- CodeQL security analysis
 
-- **Multi-Python Testing**: Tests run on Python 3.9, 3.10, and 3.11
-- **Dependency Caching**: Pip dependencies are cached for faster builds
-- **Code Linting**: Flake8 linting with syntax error detection
-- **Test Coverage**: Coverage reports generated with pytest-cov
-- **Test Artifacts**: HTML test reports and coverage reports uploaded as artifacts
-- **Package Building**: Automatic package building for main branch pushes
-- **Codecov Integration**: Coverage reports sent to Codecov for tracking
+#### Testing
+- Matrix testing across Python 3.8, 3.9, 3.10, 3.11, 3.12
+- Multi-platform testing (Ubuntu, Windows, macOS)
+- Test coverage reporting
+- Artifact uploads for test results and coverage reports
 
-#### Workflow Jobs
-
-1. **Test Job**: Runs on all Python versions
-   - Installs dependencies
-   - Runs flake8 linting
-   - Executes pytest with coverage
-   - Uploads test results and coverage reports as artifacts
-
-2. **Build Job**: Runs only on main branch pushes
-   - Builds the Python package
-   - Uploads distribution artifacts
+#### Build & Distribution
+- Package building (wheel and source distribution)
+- Distribution validation
+- Integration testing
+- Deployment readiness checks
 
 #### Artifacts
+The CI pipeline generates and stores the following artifacts:
+- **Test Results**: JUnit XML files and HTML coverage reports
+- **Security Reports**: Bandit and Safety scan results
+- **Distribution Packages**: Built wheel and source distributions
 
-The workflow generates the following artifacts:
-- `test-results-{python-version}`: HTML test reports and coverage data
-- `python-package-distributions`: Built Python packages (wheels and source distributions)
+### Contributing
 
-All artifacts are retained for 30-90 days and can be downloaded from the GitHub Actions interface.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run the test suite (`pytest`)
+5. Run code quality checks (`black src/ tests/ && isort src/ tests/ && flake8 src/ tests/`)
+6. Commit your changes (`git commit -m 'Add some amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+### Supported Python Versions
+
+This project supports Python 3.8 and above. The CI pipeline tests against:
+- Python 3.8
+- Python 3.9
+- Python 3.10
+- Python 3.11
+- Python 3.12
+
+### Dependencies
+
+#### Runtime Dependencies
+- `streamlit>=1.22.0` - Web interface framework
+
+#### Development Dependencies
+- `pytest>=7.3.1` - Testing framework
+- `pytest-cov>=4.1.0` - Coverage plugin for pytest
+- `coverage>=7.2.0` - Coverage measurement
+- `black>=23.0.0` - Code formatter
+- `isort>=5.12.0` - Import sorter
+- `bandit>=1.7.5` - Security linter
+- `safety>=2.3.0` - Dependency vulnerability scanner
+- `flake8>=6.0.0` - Code linter
 
 ## License
 
