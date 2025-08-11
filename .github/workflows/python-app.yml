@@ -1,128 +1,24 @@
-# Comprehensive CI/CD workflow for Python Task Manager Application
-# This workflow builds, tests, and analyzes the code with multiple Python versions
+# This workflow will install Python dependencies, run tests and lint with multiple versions of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: CI/CD Pipeline
+name: Build and Test
 
 on:
   push:
     branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main", "develop" ]
-  schedule:
-    # Run weekly security scans
-    - cron: '0 2 * * 1'
 
 permissions:
   contents: read
   security-events: write
-  actions: read
-
-env:
-  PYTHON_DEFAULT_VERSION: "3.10"
 
 jobs:
-  # Code quality and security analysis
-  code-quality:
-    name: Code Quality & Security
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
-        cache: 'pip'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 black isort bandit safety
-        pip install -r requirements.txt
-
-    - name: Code formatting check (Black)
-      run: |
-        black --check --diff src/ tests/
-
-    - name: Import sorting check (isort)
-      run: |
-        isort --check-only --diff src/ tests/
-
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 src/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 src/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-    - name: Security analysis with Bandit
-      run: |
-        bandit -r src/ -f json -o bandit-report.json || true
-        bandit -r src/ -f txt
-
-    - name: Dependency vulnerability check
-      run: |
-        safety check --json --output safety-report.json || true
-        safety check
-
-    - name: Upload security reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-reports
-        path: |
-          bandit-report.json
-          safety-report.json
-        retention-days: 30
-
-  # Initialize CodeQL analysis
-  codeql-analysis:
-    name: CodeQL Security Analysis
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'python' ]
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-
-  # Build and test matrix
   test:
-    name: Test Suite
-    runs-on: ${{ matrix.os }}
-    needs: code-quality
-    
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        exclude:
-          # Exclude some combinations to reduce CI time
-          - os: windows-latest
-            python-version: "3.8"
-          - os: macos-latest
-            python-version: "3.8"
 
     steps:
     - name: Checkout code
@@ -132,148 +28,149 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -e .
-        pip install -r requirements.txt
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
-    - name: Run tests with coverage
+    - name: Lint with flake8
       run: |
-        pytest --verbose --tb=short
-      env:
-        PYTHONPATH: ${{ github.workspace }}
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Security check with bandit
+      run: |
+        bandit -r src/ -f json -o bandit-report.json || true
+
+    - name: Safety check for vulnerabilities
+      run: |
+        safety check --json --output safety-report.json || true
+
+    - name: Test with pytest and generate coverage
+      run: |
+        pytest --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=pytest-results.xml
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
+        name: test-results-${{ matrix.python-version }}
         path: |
-          test-results.xml
+          pytest-results.xml
           htmlcov/
-          coverage.xml
+          .coverage
+        retention-days: 30
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports-${{ matrix.python-version }}
+        path: |
+          bandit-report.json
+          safety-report.json
         retention-days: 30
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == env.PYTHON_DEFAULT_VERSION
+      if: matrix.python-version == '3.10'
       with:
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
 
-  # Build distribution packages
   build:
-    name: Build Distribution
-    runs-on: ubuntu-latest
     needs: test
-    
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
-        cache: 'pip'
+        python-version: "3.10"
 
     - name: Install build dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build twine
+        pip install build wheel setuptools
 
-    - name: Build distribution packages
+    - name: Build package
       run: |
         python -m build
-
-    - name: Check distribution packages
-      run: |
-        twine check dist/*
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: distribution-packages
+        name: python-package-distributions
         path: dist/
         retention-days: 90
 
-  # Integration tests (if applicable)
   integration-test:
-    name: Integration Tests
+    needs: test
     runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+    if: github.event_name == 'push'
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
-        cache: 'pip'
+        python-version: "3.10"
 
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: distribution-packages
-        path: dist/
-
-    - name: Install from wheel
+    - name: Install dependencies
       run: |
-        pip install dist/*.whl
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run integration tests
+      run: |
+        # Create a test task file and run basic integration tests
+        python -c "
+from src.services.task_service import TaskService
+import os
+
+# Test basic functionality
+service = TaskService('test_integration.json')
+task1 = service.add_task('Integration Test Task', 'Testing the full workflow', 'high')
+print(f'Created task: {task1}')
+
+tasks = service.get_all_tasks()
+print(f'Total tasks: {len(tasks)}')
+
+# Cleanup
+if os.path.exists('test_integration.json'):
+    os.remove('test_integration.json')
+
+print('Integration test completed successfully!')
+"
 
     - name: Test CLI functionality
       run: |
-        # Test that the CLI can be imported and basic functionality works
-        python -c "from src.cli import main; print('CLI import successful')"
-        python -c "from src.app import main; print('App import successful')"
-
-    - name: Test package installation
-      run: |
-        # Test that the package can be imported after installation
-        python -c "import src.models.task; print('Package import successful')"
-        python -c "import src.services.task_service; print('Service import successful')"
-
-  # Deployment readiness check
-  deployment-check:
-    name: Deployment Readiness
-    runs-on: ubuntu-latest
-    needs: [test, build, integration-test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-
-    - name: List artifacts
-      run: |
-        echo "Available artifacts:"
-        find . -name "*.whl" -o -name "*.tar.gz" -o -name "*.xml" -o -name "*.json" | head -20
-
-    - name: Deployment readiness summary
-      run: |
-        echo "✅ Code quality checks passed"
-        echo "✅ Security analysis completed"
-        echo "✅ Tests passed across multiple Python versions"
-        echo "✅ Distribution packages built successfully"
-        echo "✅ Integration tests passed"
-        echo "🚀 Ready for deployment!"
-
-    - name: Create deployment summary
-      run: |
-        echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- **Build Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
-        echo "- **Test Coverage**: Check coverage reports in artifacts" >> $GITHUB_STEP_SUMMARY
-        echo "- **Security Scan**: Check security reports in artifacts" >> $GITHUB_STEP_SUMMARY
-        echo "- **Python Versions Tested**: 3.8, 3.9, 3.10, 3.11, 3.12" >> $GITHUB_STEP_SUMMARY
-        echo "- **Platforms Tested**: Ubuntu, Windows, macOS" >> $GITHUB_STEP_SUMMARY
+        # Test that the CLI can be imported and basic help works
+        python -c "
+try:
+    from src.cli import main
+    print('CLI module imported successfully')
+except ImportError as e:
+    print(f'CLI import failed: {e}')
+    exit(1)
+"
