@@ -80,71 +80,67 @@ The web interface provides the following pages:
 
 ## Testing
 
-Run the tests:
+The project includes comprehensive unit and integration tests.
 
-```
+### Running Tests Locally
+
+Run all tests:
+```bash
 pytest
 ```
 
 Run tests with coverage:
-
-```
-pytest --cov=src --cov-report=html
-```
-
-## Code Quality
-
-This project uses several tools to maintain code quality:
-
-- **Black**: Code formatting
-- **isort**: Import sorting
-- **flake8**: Linting
-- **pytest**: Testing with coverage
-
-To run all quality checks locally:
-
 ```bash
-# Format code
-black .
-isort .
-
-# Check formatting (without making changes)
-black --check .
-isort --check-only .
-
-# Lint code
-flake8 .
-
-# Run tests with coverage
-pytest --cov=src --cov-report=term-missing
+pytest --cov=src --cov-report=html --cov-report=term
 ```
 
-## CI/CD Pipeline
+Run specific test files:
+```bash
+pytest tests/test_task_model.py
+pytest tests/test_task_service.py
+pytest tests/test_integration.py
+```
 
-This project uses GitHub Actions for continuous integration and deployment. The pipeline includes:
+### Test Structure
 
-### Test Job
-- **Multi-version testing**: Tests run on Python 3.8, 3.9, 3.10, 3.11, and 3.12
-- **Code quality checks**: Black formatting, isort import sorting, and flake8 linting
-- **Test coverage**: Comprehensive test coverage with reporting
-- **Dependency caching**: Pip dependencies are cached for faster builds
+- `tests/test_task_model.py` - Unit tests for the Task model
+- `tests/test_task_service.py` - Unit tests for the TaskService class
+- `tests/test_integration.py` - Integration tests for complete workflows
+- `tests/conftest.py` - Shared test configuration and fixtures
 
-### Build Job
-- **Package building**: Creates distributable packages
-- **Package validation**: Validates package integrity with twine
-- **Artifact upload**: Stores build artifacts for potential deployment
-- **Conditional execution**: Only runs on main branch after successful tests
+### CI/CD Pipeline
 
-### Workflow Triggers
-- **Push events**: Triggers on pushes to any branch
-- **Pull requests**: Triggers on pull requests to any branch
-- **Manual dispatch**: Can be triggered manually from GitHub interface
+The project uses GitHub Actions for continuous integration and deployment:
 
-The workflow ensures that:
-1. All code changes are properly tested across multiple Python versions
-2. Code style and quality standards are maintained
-3. Test coverage is tracked and reported
-4. Packages can be built successfully before deployment
+#### Workflow Features
+
+- **Multi-Python Testing**: Tests run on Python 3.9, 3.10, and 3.11
+- **Dependency Caching**: Pip dependencies are cached for faster builds
+- **Code Linting**: Flake8 linting with syntax error detection
+- **Test Coverage**: Coverage reports generated with pytest-cov
+- **Test Artifacts**: HTML test reports and coverage reports uploaded as artifacts
+- **Package Building**: Automatic package building for main branch pushes
+- **Codecov Integration**: Coverage reports sent to Codecov for tracking
+
+#### Workflow Jobs
+
+1. **Test Job**: Runs on all Python versions
+   - Installs dependencies
+   - Runs flake8 linting
+   - Executes pytest with coverage
+   - Uploads test results and coverage reports as artifacts
+
+2. **Build Job**: Runs only on main branch pushes
+   - Builds the Python package
+   - Uploads distribution artifacts
+
+#### Artifacts
+
+The workflow generates the following artifacts:
+- `test-results-{python-version}`: HTML test reports and coverage data
+- `python-package-distributions`: Built Python packages (wheels and source distributions)
+
+All artifacts are retained for 30-90 days and can be downloaded from the GitHub Actions interface.
 
 ## License
 

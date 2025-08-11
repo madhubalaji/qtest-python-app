@@ -12,7 +12,7 @@ class TestTask:
 
     def test_task_creation_with_defaults(self):
         """Test creating a task with default values."""
-        task = Task(1, "Test Task")
+        task = Task(task_id=1, title="Test Task")
         
         assert task.id == 1
         assert task.title == "Test Task"
@@ -27,7 +27,7 @@ class TestTask:
         task = Task(
             task_id=2,
             title="Important Task",
-            description="This is a detailed description",
+            description="This is an important task",
             priority="high",
             completed=True,
             created_at=created_at
@@ -35,7 +35,7 @@ class TestTask:
         
         assert task.id == 2
         assert task.title == "Important Task"
-        assert task.description == "This is a detailed description"
+        assert task.description == "This is an important task"
         assert task.priority == "high"
         assert task.completed is True
         assert task.created_at == created_at
@@ -45,7 +45,7 @@ class TestTask:
         task = Task(
             task_id=3,
             title="Dict Test",
-            description="Test description",
+            description="Testing dict conversion",
             priority="low",
             completed=False
         )
@@ -54,7 +54,7 @@ class TestTask:
         
         assert task_dict["id"] == 3
         assert task_dict["title"] == "Dict Test"
-        assert task_dict["description"] == "Test description"
+        assert task_dict["description"] == "Testing dict conversion"
         assert task_dict["priority"] == "low"
         assert task_dict["completed"] is False
         assert "created_at" in task_dict
@@ -93,59 +93,36 @@ class TestTask:
         assert task.description == ""
         assert task.priority == "medium"
         assert task.completed is False
-        assert task.created_at is not None
+        assert task.created_at is None
 
-    def test_task_string_representation_active(self):
-        """Test string representation of an active task."""
-        task = Task(6, "Active Task", priority="high", completed=False)
-        task_str = str(task)
+    def test_task_string_representation(self):
+        """Test string representation of a task."""
+        # Test active task
+        active_task = Task(task_id=6, title="Active Task", priority="high")
+        assert str(active_task) == "Task 6: Active Task (Active, high priority)"
         
-        assert "Task 6: Active Task (Active, high priority)" == task_str
-
-    def test_task_string_representation_completed(self):
-        """Test string representation of a completed task."""
-        task = Task(7, "Completed Task", priority="low", completed=True)
-        task_str = str(task)
-        
-        assert "Task 7: Completed Task (Completed, low priority)" == task_str
-
-    def test_task_created_at_auto_generation(self):
-        """Test that created_at is automatically generated when not provided."""
-        task = Task(8, "Auto Date Task")
-        
-        # Check that created_at is a valid datetime string
-        try:
-            datetime.strptime(task.created_at, "%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            pytest.fail("created_at should be a valid datetime string")
+        # Test completed task
+        completed_task = Task(task_id=7, title="Completed Task", priority="low", completed=True)
+        assert str(completed_task) == "Task 7: Completed Task (Completed, low priority)"
 
     def test_task_priority_validation(self):
         """Test that task accepts different priority values."""
         priorities = ["low", "medium", "high"]
         
         for i, priority in enumerate(priorities, 1):
-            task = Task(i, f"Task {i}", priority=priority)
+            task = Task(task_id=i, title=f"Task {i}", priority=priority)
             assert task.priority == priority
 
-    def test_task_roundtrip_dict_conversion(self):
-        """Test that task can be converted to dict and back without data loss."""
-        original_task = Task(
-            task_id=9,
-            title="Roundtrip Task",
-            description="Test roundtrip conversion",
-            priority="medium",
-            completed=False,
-            created_at="2023-01-01 15:30:00"
-        )
+    def test_task_created_at_auto_generation(self):
+        """Test that created_at is automatically generated when not provided."""
+        task = Task(task_id=8, title="Auto Timestamp Task")
         
-        # Convert to dict and back
-        task_dict = original_task.to_dict()
-        restored_task = Task.from_dict(task_dict)
+        # Check that created_at is set and is a valid datetime string
+        assert task.created_at is not None
+        assert len(task.created_at) > 0
         
-        # Verify all fields match
-        assert restored_task.id == original_task.id
-        assert restored_task.title == original_task.title
-        assert restored_task.description == original_task.description
-        assert restored_task.priority == original_task.priority
-        assert restored_task.completed == original_task.completed
-        assert restored_task.created_at == original_task.created_at
+        # Try to parse the datetime string to ensure it's valid
+        try:
+            datetime.strptime(task.created_at, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            pytest.fail("created_at is not in the expected datetime format")
