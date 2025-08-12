@@ -4,10 +4,11 @@ A simple task management application with both CLI and web interfaces.
 
 ## Features
 
-- Add, view, update the tasks
+- Add, view, update, and delete tasks
 - Mark tasks as complete
 - Search for tasks by keyword
 - Filter tasks by status and priority
+- Delete tasks with confirmation dialog
 - Command-line interface for quick task management
 - Web interface built with Streamlit for a user-friendly experience
 
@@ -26,6 +27,10 @@ task_manager_project/
 │   │   └── exceptions.py   # Custom exceptions
 │   ├── app.py              # Streamlit web application
 │   └── cli.py              # Command-line interface
+├── tests/                  # Test cases
+│   ├── test_task_model.py  # Tests for Task model
+│   ├── test_task_service.py# Tests for TaskService
+│   └── test_integration.py # Integration tests
 └── requirements.txt        # Project dependencies
 ```
 
@@ -71,11 +76,56 @@ streamlit run src/app.py
 ```
 
 The web interface provides the following pages:
-- View Tasks: Display and manage all tasks
-- Add Task: Create new tasks
-- Search Tasks: Find tasks by keyword
+- **View Tasks**: Display and manage all tasks with delete functionality
+- **Add Task**: Create new tasks
+- **Search Tasks**: Find tasks by keyword with delete option in task details
 
+### Delete Functionality
 
+The application now includes comprehensive delete functionality:
+
+#### Web Interface:
+- **Delete buttons** (🗑️) are available in the task list view
+- **Confirmation dialog** prevents accidental deletions
+- **Delete option** in task details view when searching
+- **Success/error messages** provide user feedback
+
+#### Command Line Interface:
+- Use `python -m src.cli delete <task-id>` to delete tasks
+- Includes confirmation prompts for safety
+
+## Testing
+
+Run the complete test suite:
+
+```bash
+pytest
+```
+
+Run specific test files:
+
+```bash
+# Test the Task model
+pytest tests/test_task_model.py
+
+# Test the TaskService
+pytest tests/test_task_service.py
+
+# Test integration scenarios
+pytest tests/test_integration.py
+```
+
+Run a quick functionality test:
+
+```bash
+python run_tests.py
+```
+
+The test suite includes:
+- **Unit tests** for Task model and TaskService
+- **Integration tests** for complete workflows
+- **Delete functionality tests** with error handling
+- **Persistence tests** to ensure data integrity
 
 ## License
 

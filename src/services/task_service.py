@@ -4,7 +4,7 @@ Task service for managing task operations.
 
 import os
 import json
-from typing import List, Dict, Any, Optional
+from typing import List
 
 from src.models.task import Task
 from src.utils.exceptions import TaskNotFoundException
