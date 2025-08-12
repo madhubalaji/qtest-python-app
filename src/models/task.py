@@ -16,7 +16,7 @@ class Task:
         description: str = "",
         priority: str = "medium",
         completed: bool = False,
-        created_at: Optional[str] = None
+        created_at: Optional[str] = None,
     ):
         """
         Initialize a new Task instance.
@@ -34,7 +34,9 @@ class Task:
         self.description = description
         self.priority = priority
         self.completed = completed
-        self.created_at = created_at or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.created_at = created_at or datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -49,11 +51,11 @@ class Task:
             "description": self.description,
             "priority": self.priority,
             "completed": self.completed,
-            "created_at": self.created_at
+            "created_at": self.created_at,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Task':
+    def from_dict(cls, data: Dict[str, Any]) -> "Task":
         """
         Create a Task instance from a dictionary.
 
@@ -69,7 +71,7 @@ class Task:
             description=data.get("description", ""),
             priority=data.get("priority", "medium"),
             completed=data.get("completed", False),
-            created_at=data.get("created_at")
+            created_at=data.get("created_at"),
         )
 
     def __str__(self) -> str:
