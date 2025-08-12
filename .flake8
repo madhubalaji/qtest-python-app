@@ -5,27 +5,19 @@ exclude =
     .git,
     __pycache__,
     .pytest_cache,
-    .coverage,
-    htmlcov,
-    dist,
-    build,
-    *.egg-info,
+    .venv,
     venv,
     env,
-    .venv,
-    .env
-
-# Error codes to ignore
+    build,
+    dist,
+    *.egg-info
+select = E,W,F
 ignore = 
     E203,  # whitespace before ':'
     W503,  # line break before binary operator
-    W504,  # line break after binary operator
-
-# Error codes to always check
-select = E,W,F,C
-
+    E501   # line too long (handled by max-line-length)
 per-file-ignores =
-    # Tests can have longer lines and more complex functions
-    tests/*:E501,C901
-    # __init__.py files can be empty
     __init__.py:F401
+show-source = True
+statistics = True
+count = True

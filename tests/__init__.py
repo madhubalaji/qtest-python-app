@@ -1,3 +1,1 @@
-"""
-Test package for the task manager application.
-"""
+"""Test package for the task manager application."""
