@@ -1,3 +1,3 @@
 """
-Task Manager Application Package
+Task Manager Application Package.
 """

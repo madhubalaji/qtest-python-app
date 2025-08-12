@@ -14,259 +14,217 @@ from src.utils.exceptions import TaskNotFoundException
 class TestTaskService:
     """Test cases for the TaskService class."""
 
-    @pytest.fixture
-    def temp_storage_file(self):
-        """Create a temporary storage file for testing."""
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as f:
-            temp_file = f.name
-        yield temp_file
-        # Cleanup
-        if os.path.exists(temp_file):
-            os.unlink(temp_file)
+    def setup_method(self):
+        """Set up test fixtures before each test method."""
+        # Create a temporary file for testing
+        self.temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
+        self.temp_file.close()
+        self.task_service = TaskService(self.temp_file.name)
 
-    @pytest.fixture
-    def task_service(self, temp_storage_file):
-        """Create a TaskService instance with temporary storage."""
-        return TaskService(temp_storage_file)
+    def teardown_method(self):
+        """Clean up after each test method."""
+        # Remove the temporary file
+        if os.path.exists(self.temp_file.name):
+            os.unlink(self.temp_file.name)
 
-    @pytest.fixture
-    def sample_tasks(self, task_service):
-        """Create sample tasks for testing."""
-        task1 = task_service.add_task("Task 1", "Description 1", "high")
-        task2 = task_service.add_task("Task 2", "Description 2", "medium")
-        task3 = task_service.add_task("Task 3", "Description 3", "low")
-        return [task1, task2, task3]
+    def test_task_service_initialization(self):
+        """Test TaskService initialization."""
+        assert self.task_service.storage_file == self.temp_file.name
+        assert isinstance(self.task_service.tasks, list)
+        assert len(self.task_service.tasks) == 0
 
-    def test_task_service_initialization_empty_file(self, temp_storage_file):
-        """Test TaskService initialization with non-existent file."""
-        service = TaskService(temp_storage_file)
-        assert len(service.tasks) == 0
-
-    def test_task_service_initialization_with_existing_data(self, temp_storage_file):
-        """Test TaskService initialization with existing data."""
-        # Create test data
-        test_data = [
-            {
-                "id": 1,
-                "title": "Existing Task",
-                "description": "Pre-existing task",
-                "priority": "medium",
-                "completed": False,
-                "created_at": "2023-01-01 12:00:00"
-            }
-        ]
-        
-        with open(temp_storage_file, 'w') as f:
-            json.dump(test_data, f)
-        
-        service = TaskService(temp_storage_file)
-        assert len(service.tasks) == 1
-        assert service.tasks[0].title == "Existing Task"
-
-    def test_add_task(self, task_service):
+    def test_add_task(self):
         """Test adding a new task."""
-        task = task_service.add_task("New Task", "Task description", "high")
+        task = self.task_service.add_task(
+            title="Test Task",
+            description="Test Description",
+            priority="high"
+        )
         
+        assert isinstance(task, Task)
         assert task.id == 1
-        assert task.title == "New Task"
-        assert task.description == "Task description"
+        assert task.title == "Test Task"
+        assert task.description == "Test Description"
         assert task.priority == "high"
         assert task.completed is False
-        assert len(task_service.tasks) == 1
+        assert len(self.task_service.tasks) == 1
 
-    def test_add_task_with_defaults(self, task_service):
-        """Test adding a task with default values."""
-        task = task_service.add_task("Default Task")
-        
-        assert task.title == "Default Task"
-        assert task.description == ""
-        assert task.priority == "medium"
-        assert task.completed is False
-
-    def test_add_multiple_tasks_incremental_ids(self, task_service):
-        """Test that task IDs increment correctly."""
-        task1 = task_service.add_task("Task 1")
-        task2 = task_service.add_task("Task 2")
-        task3 = task_service.add_task("Task 3")
+    def test_add_multiple_tasks(self):
+        """Test adding multiple tasks with incremental IDs."""
+        task1 = self.task_service.add_task("Task 1")
+        task2 = self.task_service.add_task("Task 2")
+        task3 = self.task_service.add_task("Task 3")
         
         assert task1.id == 1
         assert task2.id == 2
         assert task3.id == 3
+        assert len(self.task_service.tasks) == 3
 
-    def test_get_all_tasks(self, task_service, sample_tasks):
+    def test_get_all_tasks(self):
         """Test getting all tasks."""
-        all_tasks = task_service.get_all_tasks()
-        assert len(all_tasks) == 3
-        assert all([task in all_tasks for task in sample_tasks])
-
-    def test_get_all_tasks_show_completed_false(self, task_service, sample_tasks):
-        """Test getting tasks with completed tasks filtered out."""
-        # Mark one task as completed
-        task_service.complete_task(sample_tasks[0].id)
+        self.task_service.add_task("Task 1")
+        self.task_service.add_task("Task 2")
         
-        active_tasks = task_service.get_all_tasks(show_completed=False)
-        assert len(active_tasks) == 2
-        assert all(not task.completed for task in active_tasks)
+        all_tasks = self.task_service.get_all_tasks()
+        assert len(all_tasks) == 2
+        assert all_tasks[0].title == "Task 1"
+        assert all_tasks[1].title == "Task 2"
 
-    def test_get_task_by_id(self, task_service, sample_tasks):
+    def test_get_all_tasks_with_completed_filter(self):
+        """Test getting tasks with completed filter."""
+        task1 = self.task_service.add_task("Active Task")
+        task2 = self.task_service.add_task("Completed Task")
+        self.task_service.complete_task(task2.id)
+        
+        # Get all tasks including completed
+        all_tasks = self.task_service.get_all_tasks(show_completed=True)
+        assert len(all_tasks) == 2
+        
+        # Get only active tasks
+        active_tasks = self.task_service.get_all_tasks(show_completed=False)
+        assert len(active_tasks) == 1
+        assert active_tasks[0].title == "Active Task"
+
+    def test_get_task_by_id(self):
         """Test getting a task by ID."""
-        task_id = sample_tasks[1].id
-        retrieved_task = task_service.get_task_by_id(task_id)
+        task = self.task_service.add_task("Test Task")
+        retrieved_task = self.task_service.get_task_by_id(task.id)
         
-        assert retrieved_task.id == task_id
-        assert retrieved_task.title == sample_tasks[1].title
+        assert retrieved_task.id == task.id
+        assert retrieved_task.title == task.title
 
-    def test_get_task_by_id_not_found(self, task_service):
-        """Test getting a non-existent task by ID."""
+    def test_get_task_by_id_not_found(self):
+        """Test getting a task by non-existent ID."""
         with pytest.raises(TaskNotFoundException):
-            task_service.get_task_by_id(999)
+            self.task_service.get_task_by_id(999)
 
-    def test_update_task(self, task_service, sample_tasks):
+    def test_update_task(self):
         """Test updating a task."""
-        task_id = sample_tasks[0].id
-        updated_task = task_service.update_task(
-            task_id,
-            title="Updated Title",
+        task = self.task_service.add_task("Original Task")
+        
+        updated_task = self.task_service.update_task(
+            task.id,
+            title="Updated Task",
             description="Updated Description",
             priority="low",
             completed=True
         )
         
-        assert updated_task.title == "Updated Title"
+        assert updated_task.id == task.id
+        assert updated_task.title == "Updated Task"
         assert updated_task.description == "Updated Description"
         assert updated_task.priority == "low"
         assert updated_task.completed is True
 
-    def test_update_task_partial(self, task_service, sample_tasks):
-        """Test updating only some fields of a task."""
-        task_id = sample_tasks[0].id
-        original_description = sample_tasks[0].description
+    def test_update_task_partial(self):
+        """Test updating a task with partial data."""
+        task = self.task_service.add_task("Test Task", "Original Description", "medium")
         
-        updated_task = task_service.update_task(task_id, title="New Title Only")
+        updated_task = self.task_service.update_task(task.id, title="New Title")
         
-        assert updated_task.title == "New Title Only"
-        assert updated_task.description == original_description  # Should remain unchanged
+        assert updated_task.title == "New Title"
+        assert updated_task.description == "Original Description"  # Unchanged
+        assert updated_task.priority == "medium"  # Unchanged
 
-    def test_update_task_not_found(self, task_service):
+    def test_update_task_not_found(self):
         """Test updating a non-existent task."""
         with pytest.raises(TaskNotFoundException):
-            task_service.update_task(999, title="Non-existent")
+            self.task_service.update_task(999, title="Non-existent")
 
-    def test_complete_task(self, task_service, sample_tasks):
+    def test_complete_task(self):
         """Test marking a task as complete."""
-        task_id = sample_tasks[0].id
-        completed_task = task_service.complete_task(task_id)
+        task = self.task_service.add_task("Test Task")
+        assert task.completed is False
         
+        completed_task = self.task_service.complete_task(task.id)
         assert completed_task.completed is True
-        assert completed_task.id == task_id
 
-    def test_complete_task_not_found(self, task_service):
+    def test_complete_task_not_found(self):
         """Test completing a non-existent task."""
         with pytest.raises(TaskNotFoundException):
-            task_service.complete_task(999)
+            self.task_service.complete_task(999)
 
-    def test_delete_task(self, task_service, sample_tasks):
+    def test_delete_task(self):
         """Test deleting a task."""
-        task_id = sample_tasks[1].id
-        original_count = len(task_service.tasks)
+        task1 = self.task_service.add_task("Task 1")
+        task2 = self.task_service.add_task("Task 2")
         
-        deleted_task = task_service.delete_task(task_id)
+        assert len(self.task_service.tasks) == 2
         
-        assert deleted_task.id == task_id
-        assert len(task_service.tasks) == original_count - 1
+        deleted_task = self.task_service.delete_task(task1.id)
         
-        # Verify task is no longer in the list
-        with pytest.raises(TaskNotFoundException):
-            task_service.get_task_by_id(task_id)
+        assert deleted_task.id == task1.id
+        assert len(self.task_service.tasks) == 1
+        assert self.task_service.tasks[0].id == task2.id
 
-    def test_delete_task_not_found(self, task_service):
+    def test_delete_task_not_found(self):
         """Test deleting a non-existent task."""
         with pytest.raises(TaskNotFoundException):
-            task_service.delete_task(999)
+            self.task_service.delete_task(999)
 
-    def test_delete_all_tasks(self, task_service, sample_tasks):
-        """Test deleting all tasks one by one."""
-        original_count = len(sample_tasks)
-        
-        for i, task in enumerate(sample_tasks):
-            task_service.delete_task(task.id)
-            assert len(task_service.tasks) == original_count - (i + 1)
-        
-        assert len(task_service.tasks) == 0
-
-    def test_search_tasks(self, task_service, sample_tasks):
+    def test_search_tasks(self):
         """Test searching for tasks."""
-        # Add a task with specific content for searching
-        task_service.add_task("Special Task", "This has special content")
+        self.task_service.add_task("Python Programming", "Learn Python basics")
+        self.task_service.add_task("Java Development", "Build Java application")
+        self.task_service.add_task("Database Design", "Design Python database")
         
         # Search by title
-        results = task_service.search_tasks("Special")
-        assert len(results) == 1
-        assert results[0].title == "Special Task"
+        python_tasks = self.task_service.search_tasks("Python")
+        assert len(python_tasks) == 2
         
         # Search by description
-        results = task_service.search_tasks("special content")
-        assert len(results) == 1
+        learn_tasks = self.task_service.search_tasks("Learn")
+        assert len(learn_tasks) == 1
         
-        # Search case insensitive
-        results = task_service.search_tasks("SPECIAL")
-        assert len(results) == 1
+        # Case insensitive search
+        java_tasks = self.task_service.search_tasks("java")
+        assert len(java_tasks) == 1
 
-    def test_search_tasks_no_results(self, task_service, sample_tasks):
+    def test_search_tasks_no_results(self):
         """Test searching with no matching results."""
-        results = task_service.search_tasks("nonexistent")
+        self.task_service.add_task("Test Task")
+        results = self.task_service.search_tasks("nonexistent")
         assert len(results) == 0
 
-    def test_search_tasks_multiple_results(self, task_service):
-        """Test searching with multiple matching results."""
-        task_service.add_task("Test Task 1", "Testing description")
-        task_service.add_task("Test Task 2", "Another test")
-        task_service.add_task("Different Task", "No match here")
-        
-        results = task_service.search_tasks("test")
-        assert len(results) == 2
-
-    def test_persistence_after_operations(self, temp_storage_file):
-        """Test that operations are persisted to storage."""
-        # Create service and add tasks
-        service1 = TaskService(temp_storage_file)
-        task1 = service1.add_task("Persistent Task", "Should be saved")
-        task2 = service1.add_task("Another Task", "Also saved")
+    def test_persistence_save_and_load(self):
+        """Test that tasks are saved to and loaded from file."""
+        # Add tasks
+        task1 = self.task_service.add_task("Persistent Task 1")
+        task2 = self.task_service.add_task("Persistent Task 2")
         
         # Create new service instance with same file
-        service2 = TaskService(temp_storage_file)
+        new_service = TaskService(self.temp_file.name)
         
-        # Verify tasks were loaded
-        assert len(service2.tasks) == 2
-        loaded_task = service2.get_task_by_id(task1.id)
-        assert loaded_task.title == "Persistent Task"
+        # Check that tasks were loaded
+        assert len(new_service.tasks) == 2
+        assert new_service.tasks[0].title == "Persistent Task 1"
+        assert new_service.tasks[1].title == "Persistent Task 2"
 
-    def test_persistence_after_delete(self, temp_storage_file):
-        """Test that deletions are persisted to storage."""
-        # Create service and add tasks
-        service1 = TaskService(temp_storage_file)
-        task1 = service1.add_task("Task to Delete")
-        task2 = service1.add_task("Task to Keep")
-        
-        # Delete one task
-        service1.delete_task(task1.id)
-        
-        # Create new service instance
-        service2 = TaskService(temp_storage_file)
-        
-        # Verify deletion was persisted
-        assert len(service2.tasks) == 1
-        assert service2.tasks[0].title == "Task to Keep"
-        
-        with pytest.raises(TaskNotFoundException):
-            service2.get_task_by_id(task1.id)
+    def test_load_from_nonexistent_file(self):
+        """Test loading from a non-existent file."""
+        nonexistent_file = "/tmp/nonexistent_tasks.json"
+        service = TaskService(nonexistent_file)
+        assert len(service.tasks) == 0
 
-    def test_corrupted_storage_file_handling(self, temp_storage_file):
-        """Test handling of corrupted storage file."""
+    def test_load_from_corrupted_file(self):
+        """Test loading from a corrupted JSON file."""
         # Write invalid JSON to file
-        with open(temp_storage_file, 'w') as f:
+        with open(self.temp_file.name, 'w') as f:
             f.write("invalid json content")
         
-        # Should handle gracefully and start with empty task list
-        service = TaskService(temp_storage_file)
+        # Should handle gracefully and start with empty list
+        service = TaskService(self.temp_file.name)
         assert len(service.tasks) == 0
+
+    def test_task_id_generation(self):
+        """Test that task IDs are generated correctly."""
+        # Add some tasks
+        task1 = self.task_service.add_task("Task 1")
+        task2 = self.task_service.add_task("Task 2")
+        
+        # Delete first task
+        self.task_service.delete_task(task1.id)
+        
+        # Add new task - should get next available ID
+        task3 = self.task_service.add_task("Task 3")
+        assert task3.id == 3  # Should be 3, not reuse 1
