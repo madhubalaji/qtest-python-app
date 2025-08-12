@@ -26,9 +26,6 @@ task_manager_project/
 │   │   └── exceptions.py   # Custom exceptions
 │   ├── app.py              # Streamlit web application
 │   └── cli.py              # Command-line interface
-├── tests/                  # Test cases
-│   ├── test_task_model.py  # Tests for Task model
-│   └── test_task_service.py# Tests for TaskService
 └── requirements.txt        # Project dependencies
 ```
 
@@ -78,13 +75,7 @@ The web interface provides the following pages:
 - Add Task: Create new tasks
 - Search Tasks: Find tasks by keyword
 
-## Testing
 
-Run the tests:
-
-```
-pytest
-```
 
 ## License
 
