@@ -3,23 +3,37 @@ Tests for the Streamlit app functionality.
 """
 
 import pytest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock
 import streamlit as st
-from src.models.task import Task
+from unittest.mock import Mock, patch
+
 from src.services.task_service import TaskService
+from src.models.task import Task
 from src.utils.exceptions import TaskNotFoundException
 
 
 class TestAppFunctionality:
-    """Test cases for the Streamlit app functionality."""
+    """Test class for app functionality."""
 
     def setup_method(self):
-        """Set up test fixtures before each test method."""
-        # Create mock tasks for testing
+        """Set up test fixtures."""
         self.mock_tasks = [
-            Task(1, "Task 1", "Description 1", "high", completed=False),
-            Task(2, "Task 2", "Description 2", "medium", completed=True),
-            Task(3, "Task 3", "Description 3", "low", completed=False)
+            Mock(
+                id=1,
+                title="Test Task 1",
+                description="Test Description 1",
+                priority="high",
+                completed=False,
+                created_at="2023-01-01 10:00:00"
+            ),
+            Mock(
+                id=2,
+                title="Test Task 2",
+                description="Test Description 2",
+                priority="medium",
+                completed=True,
+                created_at="2023-01-02 11:00:00"
+            )
         ]
 
     @patch('streamlit.button')
@@ -28,16 +42,16 @@ class TestAppFunctionality:
         """Test the complete button functionality."""
         # Mock the button to return True (clicked)
         mock_button.return_value = True
-        
+
         # Mock task service
         mock_task_service = Mock(spec=TaskService)
         mock_task_service.get_all_tasks.return_value = [self.mock_tasks[0]]  # Only incomplete task
-        
+
         # Import and test the display function
         from src.app import display_tasks_page
-        
+
         with patch('streamlit.header'), \
-             patch('streamlit.columns'), \
+             patch('streamlit.columns', return_value=[Mock(), Mock(), Mock(), Mock()]), \
              patch('streamlit.checkbox'), \
              patch('streamlit.selectbox'), \
              patch('streamlit.container'), \
@@ -45,13 +59,12 @@ class TestAppFunctionality:
              patch('streamlit.expander'), \
              patch('streamlit.write'), \
              patch('streamlit.divider'):
-            
+
             display_tasks_page(mock_task_service)
-            
-            # Verify complete_task was called
-            mock_task_service.complete_task.assert_called_once_with(1)
-            # Verify rerun was called
-            mock_rerun.assert_called_once()
+
+        # Verify complete_task was called
+        mock_task_service.complete_task.assert_called_once_with(1)
+        mock_rerun.assert_called_once()
 
     @patch('streamlit.button')
     @patch('streamlit.rerun')
@@ -62,18 +75,18 @@ class TestAppFunctionality:
             if 'delete_' in kwargs.get('key', ''):
                 return True
             return False
-        
+
         mock_button.side_effect = button_side_effect
-        
+
         # Mock task service
         mock_task_service = Mock(spec=TaskService)
         mock_task_service.get_all_tasks.return_value = [self.mock_tasks[0]]  # Only one task
-        
+
         # Import and test the display function
         from src.app import display_tasks_page
-        
+
         with patch('streamlit.header'), \
-             patch('streamlit.columns'), \
+             patch('streamlit.columns', return_value=[Mock(), Mock(), Mock(), Mock()]), \
              patch('streamlit.checkbox'), \
              patch('streamlit.selectbox'), \
              patch('streamlit.container'), \
@@ -81,43 +94,41 @@ class TestAppFunctionality:
              patch('streamlit.expander'), \
              patch('streamlit.write'), \
              patch('streamlit.divider'):
-            
+
             display_tasks_page(mock_task_service)
-            
-            # Verify delete_task was called
-            mock_task_service.delete_task.assert_called_once_with(1)
-            # Verify rerun was called
-            mock_rerun.assert_called_once()
+
+        # Verify delete_task was called
+        mock_task_service.delete_task.assert_called_once_with(1)
+        mock_rerun.assert_called_once()
 
     @patch('streamlit.button')
     @patch('streamlit.rerun')
     def test_search_page_view_button(self, mock_rerun, mock_button):
         """Test the view button in search page."""
         mock_button.return_value = True
-        
+
         # Mock task service
         mock_task_service = Mock(spec=TaskService)
         mock_task_service.search_tasks.return_value = [self.mock_tasks[0]]
-        
+
         # Import and test the search function
         from src.app import search_tasks_page
-        
+
         with patch('streamlit.header'), \
              patch('streamlit.text_input', return_value='test'), \
              patch('streamlit.write'), \
              patch('streamlit.container'), \
-             patch('streamlit.columns'), \
+             patch('streamlit.columns', return_value=[Mock(), Mock()]), \
              patch('streamlit.markdown'), \
              patch('streamlit.expander'), \
              patch('streamlit.divider'), \
              patch('streamlit.session_state', {}) as mock_session_state:
-            
+
             search_tasks_page(mock_task_service)
-            
-            # Verify session state was set
-            assert mock_session_state.get('task_to_view') == 1
-            # Verify rerun was called
-            mock_rerun.assert_called_once()
+
+        # Verify session state was set
+        assert mock_session_state['task_to_view'] == 1
+        mock_rerun.assert_called_once()
 
     @patch('streamlit.button')
     @patch('streamlit.rerun')
@@ -128,35 +139,33 @@ class TestAppFunctionality:
             if text == "Delete Task":
                 return True
             return False
-        
+
         mock_button.side_effect = button_side_effect
-        
+
         # Mock task service
         mock_task_service = Mock(spec=TaskService)
         mock_task_service.get_task_by_id.return_value = self.mock_tasks[0]
-        
+
         # Import and test the search function with task detail view
         from src.app import search_tasks_page
-        
+
         with patch('streamlit.header'), \
              patch('streamlit.text_input', return_value='test'), \
              patch('streamlit.write'), \
              patch('streamlit.container'), \
-             patch('streamlit.columns'), \
+             patch('streamlit.columns', return_value=[Mock(), Mock(), Mock()]), \
              patch('streamlit.markdown'), \
              patch('streamlit.expander'), \
              patch('streamlit.divider'), \
              patch('streamlit.subheader'), \
              patch('streamlit.session_state', {'task_to_view': 1}) as mock_session_state:
-            
+
             search_tasks_page(mock_task_service)
-            
-            # Verify delete_task was called
-            mock_task_service.delete_task.assert_called_once_with(1)
-            # Verify session state was cleared
-            assert 'task_to_view' not in mock_session_state
-            # Verify rerun was called
-            mock_rerun.assert_called_once()
+
+        # Verify delete_task was called and session state was cleared
+        mock_task_service.delete_task.assert_called_once_with(1)
+        assert 'task_to_view' not in mock_session_state
+        mock_rerun.assert_called_once()
 
     @patch('streamlit.button')
     @patch('streamlit.rerun')
@@ -167,33 +176,32 @@ class TestAppFunctionality:
             if text == "Mark as Complete":
                 return True
             return False
-        
+
         mock_button.side_effect = button_side_effect
-        
+
         # Mock task service
         mock_task_service = Mock(spec=TaskService)
         mock_task_service.get_task_by_id.return_value = self.mock_tasks[0]  # Incomplete task
-        
+
         # Import and test the search function with task detail view
         from src.app import search_tasks_page
-        
+
         with patch('streamlit.header'), \
              patch('streamlit.text_input', return_value='test'), \
              patch('streamlit.write'), \
              patch('streamlit.container'), \
-             patch('streamlit.columns'), \
+             patch('streamlit.columns', return_value=[Mock(), Mock(), Mock()]), \
              patch('streamlit.markdown'), \
              patch('streamlit.expander'), \
              patch('streamlit.divider'), \
              patch('streamlit.subheader'), \
              patch('streamlit.session_state', {'task_to_view': 1}):
-            
+
             search_tasks_page(mock_task_service)
-            
-            # Verify complete_task was called
-            mock_task_service.complete_task.assert_called_once_with(1)
-            # Verify rerun was called
-            mock_rerun.assert_called_once()
+
+        # Verify complete_task was called
+        mock_task_service.complete_task.assert_called_once_with(1)
+        mock_rerun.assert_called_once()
 
     @patch('streamlit.button')
     @patch('streamlit.rerun')
@@ -204,57 +212,55 @@ class TestAppFunctionality:
             if text == "Close":
                 return True
             return False
-        
+
         mock_button.side_effect = button_side_effect
-        
+
         # Mock task service
         mock_task_service = Mock(spec=TaskService)
         mock_task_service.get_task_by_id.return_value = self.mock_tasks[0]
-        
+
         # Import and test the search function with task detail view
         from src.app import search_tasks_page
-        
+
         with patch('streamlit.header'), \
              patch('streamlit.text_input', return_value='test'), \
              patch('streamlit.write'), \
              patch('streamlit.container'), \
-             patch('streamlit.columns'), \
+             patch('streamlit.columns', return_value=[Mock(), Mock(), Mock()]), \
              patch('streamlit.markdown'), \
              patch('streamlit.expander'), \
              patch('streamlit.divider'), \
              patch('streamlit.subheader'), \
              patch('streamlit.session_state', {'task_to_view': 1}) as mock_session_state:
-            
+
             search_tasks_page(mock_task_service)
-            
-            # Verify session state was cleared
-            assert 'task_to_view' not in mock_session_state
-            # Verify rerun was called
-            mock_rerun.assert_called_once()
+
+        # Verify session state was cleared
+        assert 'task_to_view' not in mock_session_state
+        mock_rerun.assert_called_once()
 
     def test_task_not_found_handling(self):
         """Test handling of TaskNotFoundException in task detail view."""
         # Mock task service to raise exception
         mock_task_service = Mock(spec=TaskService)
         mock_task_service.get_task_by_id.side_effect = TaskNotFoundException("Task not found")
-        
+
         # Import and test the search function with task detail view
         from src.app import search_tasks_page
-        
+
         with patch('streamlit.header'), \
              patch('streamlit.text_input', return_value='test'), \
              patch('streamlit.write'), \
              patch('streamlit.container'), \
-             patch('streamlit.columns'), \
+             patch('streamlit.columns', return_value=[Mock(), Mock()]), \
              patch('streamlit.markdown'), \
              patch('streamlit.expander'), \
              patch('streamlit.divider'), \
              patch('streamlit.error') as mock_error, \
              patch('streamlit.session_state', {'task_to_view': 999}) as mock_session_state:
-            
+
             search_tasks_page(mock_task_service)
-            
-            # Verify error was displayed
-            mock_error.assert_called_once_with("Task not found")
-            # Verify session state was cleared
-            assert 'task_to_view' not in mock_session_state
+
+        # Verify error was displayed and session state was cleared
+        mock_error.assert_called_once_with("Task not found")
+        assert 'task_to_view' not in mock_session_state
