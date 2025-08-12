@@ -1,7 +1,5 @@
 """Tests for the Task model."""
 
-import pytest
-from datetime import datetime
 from src.models.task import Task
 
 

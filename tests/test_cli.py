@@ -1,24 +1,21 @@
-"""
-Unit tests for the CLI module.
-"""
+"""Tests for the CLI module."""
 
 import pytest
-import sys
-import os
 from unittest.mock import patch, MagicMock
-from io import StringIO
-from src.cli import main
+
 from src.models.task import Task
+from src.cli import main
 from src.utils.exceptions import TaskNotFoundException
 
 
 class TestCLI:
-    """Test cases for the CLI module."""
+    """Test cases for the CLI functionality."""
 
     @pytest.fixture
     def mock_task_service(self):
         """Create a mock TaskService for testing."""
         mock_service = MagicMock()
+        mock_service.tasks = []
         return mock_service
 
     @pytest.fixture

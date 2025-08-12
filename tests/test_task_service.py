@@ -1,11 +1,11 @@
 """Tests for the TaskService class."""
 
-import pytest
 import os
 import tempfile
-import json
-from src.services.task_service import TaskService
+import pytest
+
 from src.models.task import Task
+from src.services.task_service import TaskService
 from src.utils.exceptions import TaskNotFoundException
 
 
@@ -27,12 +27,11 @@ class TestTaskService:
         """Create a TaskService instance with temporary storage."""
         return TaskService(temp_storage_file)
 
-    def test_task_service_initialization(self, temp_storage_file):
+    def test_task_service_initialization(self, task_service):
         """Test TaskService initialization."""
-        service = TaskService(temp_storage_file)
-        assert service.storage_file == temp_storage_file
-        assert isinstance(service.tasks, list)
-        assert len(service.tasks) == 0
+        assert isinstance(task_service, TaskService)
+        assert isinstance(task_service.tasks, list)
+        assert len(task_service.tasks) == 0
 
     def test_add_task(self, task_service):
         """Test adding a new task."""

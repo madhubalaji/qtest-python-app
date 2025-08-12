@@ -1,13 +1,13 @@
-"""
-Integration tests for the task manager application.
-"""
+"""Integration tests for the task manager application."""
 
-import pytest
-import tempfile
 import os
 import json
-from src.services.task_service import TaskService
+import tempfile
+import pytest
+
 from src.models.task import Task
+from src.services.task_service import TaskService
+from src.utils.exceptions import TaskNotFoundException
 
 
 class TestIntegration:

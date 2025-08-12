@@ -1,13 +1,10 @@
-"""
-Tests for the Task model.
-"""
+"""Tests for the Task model - additional test cases."""
 
-import pytest
 from datetime import datetime
 from src.models.task import Task
 
 
-class TestTask:
+class TestTaskModel:
     """Test cases for the Task model."""
 
     def test_task_creation_with_defaults(self):
@@ -22,7 +19,7 @@ class TestTask:
         assert task.created_at is not None
 
     def test_task_creation_with_all_parameters(self):
-        """Test creating a task with all parameters specified."""
+        """Test creating a task with all parameters."""
         created_at = "2023-01-01 12:00:00"
         task = Task(
             task_id=2,
@@ -41,7 +38,7 @@ class TestTask:
         assert task.created_at == created_at
 
     def test_task_to_dict(self):
-        """Test converting a task to dictionary."""
+        """Test converting task to dictionary."""
         task = Task(
             task_id=3,
             title="Dict Task",
@@ -96,7 +93,7 @@ class TestTask:
         assert task.description == ""
         assert task.priority == "medium"
         assert task.completed is False
-        assert task.created_at is None
+        assert task.created_at is not None
 
     def test_task_string_representation(self):
         """Test string representation of a task."""

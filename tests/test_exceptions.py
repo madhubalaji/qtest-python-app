@@ -12,7 +12,7 @@ class TestExceptions:
     """Test cases for custom exceptions."""
 
     def test_task_manager_exception(self):
-        """Test base TaskManagerException."""
+        """Test TaskManagerException."""
         with pytest.raises(TaskManagerException):
             raise TaskManagerException("Base exception")
 
