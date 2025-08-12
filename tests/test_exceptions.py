@@ -1,6 +1,4 @@
-"""
-Tests for custom exceptions.
-"""
+"""Tests for custom exceptions."""
 
 import pytest
 from src.utils.exceptions import (
@@ -13,44 +11,39 @@ from src.utils.exceptions import (
 class TestExceptions:
     """Test cases for custom exceptions."""
 
-    def test_task_manager_exception_inheritance(self):
-        """Test that TaskManagerException inherits from Exception."""
-        exception = TaskManagerException("Test message")
-        assert isinstance(exception, Exception)
-        assert str(exception) == "Test message"
-
-    def test_task_not_found_exception_inheritance(self):
-        """Test that TaskNotFoundException inherits from TaskManagerException."""
-        exception = TaskNotFoundException("Task not found")
-        assert isinstance(exception, TaskManagerException)
-        assert isinstance(exception, Exception)
-        assert str(exception) == "Task not found"
-
-    def test_invalid_task_data_exception_inheritance(self):
-        """Test that InvalidTaskDataException inherits from TaskManagerException."""
-        exception = InvalidTaskDataException("Invalid data")
-        assert isinstance(exception, TaskManagerException)
-        assert isinstance(exception, Exception)
-        assert str(exception) == "Invalid data"
-
-    def test_task_not_found_exception_can_be_raised(self):
-        """Test that TaskNotFoundException can be raised and caught."""
-        with pytest.raises(TaskNotFoundException) as exc_info:
-            raise TaskNotFoundException("Task with ID 123 not found")
-        
-        assert str(exc_info.value) == "Task with ID 123 not found"
-
-    def test_invalid_task_data_exception_can_be_raised(self):
-        """Test that InvalidTaskDataException can be raised and caught."""
-        with pytest.raises(InvalidTaskDataException) as exc_info:
-            raise InvalidTaskDataException("Title cannot be empty")
-        
-        assert str(exc_info.value) == "Title cannot be empty"
-
-    def test_exceptions_can_be_caught_as_base_exception(self):
-        """Test that custom exceptions can be caught as TaskManagerException."""
+    def test_task_manager_exception(self):
+        """Test base TaskManagerException."""
         with pytest.raises(TaskManagerException):
-            raise TaskNotFoundException("Test")
+            raise TaskManagerException("Base exception")
+
+    def test_task_not_found_exception(self):
+        """Test TaskNotFoundException."""
+        with pytest.raises(TaskNotFoundException):
+            raise TaskNotFoundException("Task not found")
         
+        # Test inheritance
         with pytest.raises(TaskManagerException):
-            raise InvalidTaskDataException("Test")
+            raise TaskNotFoundException("Task not found")
+
+    def test_invalid_task_data_exception(self):
+        """Test InvalidTaskDataException."""
+        with pytest.raises(InvalidTaskDataException):
+            raise InvalidTaskDataException("Invalid data")
+        
+        # Test inheritance
+        with pytest.raises(TaskManagerException):
+            raise InvalidTaskDataException("Invalid data")
+
+    def test_exception_messages(self):
+        """Test that exception messages are preserved."""
+        message = "Custom error message"
+        
+        try:
+            raise TaskNotFoundException(message)
+        except TaskNotFoundException as e:
+            assert str(e) == message
+
+        try:
+            raise InvalidTaskDataException(message)
+        except InvalidTaskDataException as e:
+            assert str(e) == message
