@@ -1,161 +1,146 @@
-#!/usr/bin/env python3
 """
 Demo script to showcase the delete functionality in the task manager.
 """
 
-import sys
 import os
+import sys
 import tempfile
 
-# Add the project root to Python path
-sys.path.insert(0, os.path.abspath('.'))
+# Add the project root directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from src.services.task_service import TaskService
-from src.utils.exceptions import TaskNotFoundException
+from src.models.task import Task
 
 def demo_delete_functionality():
     """Demonstrate the delete functionality."""
-    print("🚀 TASK MANAGER - DELETE FUNCTIONALITY DEMO")
-    print("=" * 50)
+    print("=" * 60)
+    print("TASK MANAGER - DELETE FUNCTIONALITY DEMO")
+    print("=" * 60)
     
-    # Create temporary storage
+    # Create a temporary storage file for the demo
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         temp_file = f.name
     
     try:
-        # Initialize service
-        service = TaskService(temp_file)
-        print(f"📁 Using temporary storage: {temp_file}")
-        print()
+        # Initialize the task service
+        print("\n1. Initializing Task Service...")
+        task_service = TaskService(temp_file)
+        print("✓ Task service initialized")
         
-        # Create sample tasks
-        print("📝 Creating sample tasks...")
-        task1 = service.add_task("Complete project proposal", "Write and review the project proposal document", "high")
-        task2 = service.add_task("Team meeting", "Weekly team sync meeting", "medium")
-        task3 = service.add_task("Code review", "Review pull requests from team members", "medium")
-        task4 = service.add_task("Update documentation", "Update API documentation", "low")
-        task5 = service.add_task("Bug fixes", "Fix reported bugs in the system", "high")
+        # Add some sample tasks
+        print("\n2. Adding sample tasks...")
+        task1 = task_service.add_task("Complete project documentation", "Write comprehensive docs", "high")
+        task2 = task_service.add_task("Review code changes", "Review pull requests", "medium")
+        task3 = task_service.add_task("Update dependencies", "Update all package dependencies", "low")
         
-        print(f"✅ Created {len(service.get_all_tasks())} tasks")
-        print()
+        print(f"✓ Added task {task1.id}: {task1.title}")
+        print(f"✓ Added task {task2.id}: {task2.title}")
+        print(f"✓ Added task {task3.id}: {task3.title}")
         
         # Display all tasks
-        print("📋 Current tasks:")
-        for task in service.get_all_tasks():
-            status = "✅" if task.completed else "⏳"
-            priority_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(task.priority, "⚪")
-            print(f"  {status} [{task.id}] {task.title} {priority_emoji}")
-        print()
+        print("\n3. Current tasks:")
+        tasks = task_service.get_all_tasks()
+        for task in tasks:
+            status = "Completed" if task.completed else "Active"
+            print(f"   ID {task.id}: {task.title} ({status}, {task.priority} priority)")
         
-        # Complete some tasks
-        print("✅ Completing some tasks...")
-        service.complete_task(task2.id)
-        service.complete_task(task4.id)
-        print(f"Completed tasks: {task2.title}, {task4.title}")
-        print()
+        print(f"\nTotal tasks: {len(tasks)}")
         
-        # Display updated tasks
-        print("📋 Updated task list:")
-        for task in service.get_all_tasks():
-            status = "✅" if task.completed else "⏳"
-            priority_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(task.priority, "⚪")
-            print(f"  {status} [{task.id}] {task.title} {priority_emoji}")
-        print()
+        # Complete one task
+        print("\n4. Completing a task...")
+        completed_task = task_service.complete_task(task2.id)
+        print(f"✓ Completed task {completed_task.id}: {completed_task.title}")
+        
+        # Display tasks again
+        print("\n5. Tasks after completion:")
+        tasks = task_service.get_all_tasks()
+        for task in tasks:
+            status = "Completed" if task.completed else "Active"
+            print(f"   ID {task.id}: {task.title} ({status}, {task.priority} priority)")
         
         # Demonstrate delete functionality
-        print("🗑️  DEMONSTRATING DELETE FUNCTIONALITY")
-        print("-" * 40)
+        print("\n6. Demonstrating DELETE functionality...")
+        print(f"   Deleting task {task1.id}: {task1.title}")
         
-        # Delete a completed task
-        print(f"Deleting completed task: '{task2.title}' (ID: {task2.id})")
-        deleted_task = service.delete_task(task2.id)
-        print(f"✅ Successfully deleted: {deleted_task.title}")
-        print()
-        
-        # Delete an active task
-        print(f"Deleting active task: '{task5.title}' (ID: {task5.id})")
-        deleted_task = service.delete_task(task5.id)
-        print(f"✅ Successfully deleted: {deleted_task.title}")
-        print()
+        try:
+            deleted_task = task_service.delete_task(task1.id)
+            print(f"✓ Successfully deleted task {deleted_task.id}: {deleted_task.title}")
+        except Exception as e:
+            print(f"✗ Error deleting task: {e}")
+            return False
         
         # Display remaining tasks
-        print("📋 Remaining tasks after deletion:")
-        remaining_tasks = service.get_all_tasks()
+        print("\n7. Remaining tasks after deletion:")
+        remaining_tasks = task_service.get_all_tasks()
         if remaining_tasks:
             for task in remaining_tasks:
-                status = "✅" if task.completed else "⏳"
-                priority_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(task.priority, "⚪")
-                print(f"  {status} [{task.id}] {task.title} {priority_emoji}")
+                status = "Completed" if task.completed else "Active"
+                print(f"   ID {task.id}: {task.title} ({status}, {task.priority} priority)")
         else:
-            print("  No tasks remaining")
-        print()
+            print("   No tasks remaining")
         
-        # Demonstrate error handling
-        print("🚨 DEMONSTRATING ERROR HANDLING")
-        print("-" * 35)
+        print(f"\nTotal remaining tasks: {len(remaining_tasks)}")
         
-        print("Attempting to delete a non-existent task (ID: 999)...")
+        # Try to access deleted task (should fail)
+        print("\n8. Verifying task deletion...")
         try:
-            service.delete_task(999)
-            print("❌ This should not happen!")
-        except TaskNotFoundException as e:
-            print(f"✅ Correctly caught error: {e}")
-        print()
+            task_service.get_task_by_id(task1.id)
+            print("✗ ERROR: Deleted task is still accessible!")
+            return False
+        except Exception:
+            print(f"✓ Confirmed: Task {task1.id} is no longer accessible (correctly deleted)")
         
-        print("Attempting to delete an already deleted task...")
-        try:
-            service.delete_task(task2.id)  # Already deleted
-            print("❌ This should not happen!")
-        except TaskNotFoundException as e:
-            print(f"✅ Correctly caught error: {e}")
-        print()
+        # Delete another task
+        print("\n9. Deleting another task...")
+        print(f"   Deleting task {task3.id}: {task3.title}")
         
-        # Search functionality after deletion
-        print("🔍 SEARCH FUNCTIONALITY AFTER DELETION")
-        print("-" * 38)
+        deleted_task2 = task_service.delete_task(task3.id)
+        print(f"✓ Successfully deleted task {deleted_task2.id}: {deleted_task2.title}")
         
-        search_results = service.search_tasks("project")
-        print(f"Searching for 'project': Found {len(search_results)} results")
-        for task in search_results:
-            print(f"  - [{task.id}] {task.title}")
-        print()
+        # Final task count
+        final_tasks = task_service.get_all_tasks()
+        print(f"\n10. Final task count: {len(final_tasks)}")
         
-        # Final statistics
-        print("📊 FINAL STATISTICS")
-        print("-" * 20)
-        all_tasks = service.get_all_tasks()
-        active_tasks = service.get_all_tasks(show_completed=False)
-        completed_tasks = [t for t in all_tasks if t.completed]
+        if len(final_tasks) == 1:
+            remaining_task = final_tasks[0]
+            print(f"    Only remaining task: ID {remaining_task.id}: {remaining_task.title}")
         
-        print(f"Total tasks: {len(all_tasks)}")
-        print(f"Active tasks: {len(active_tasks)}")
-        print(f"Completed tasks: {len(completed_tasks)}")
-        print(f"Deleted tasks: 2 (Team meeting, Bug fixes)")
-        print()
+        # Test persistence
+        print("\n11. Testing persistence...")
+        new_service = TaskService(temp_file)
+        persisted_tasks = new_service.get_all_tasks()
+        print(f"✓ Persisted tasks after reload: {len(persisted_tasks)}")
         
-        print("🎉 DELETE FUNCTIONALITY DEMO COMPLETED SUCCESSFULLY!")
-        print("✅ All operations worked as expected")
-        print("✅ Error handling is robust")
-        print("✅ Data persistence is maintained")
+        if len(persisted_tasks) == len(final_tasks):
+            print("✓ Delete operations were properly persisted")
+        else:
+            print("✗ ERROR: Delete operations were not properly persisted")
+            return False
+        
+        print("\n" + "=" * 60)
+        print("DELETE FUNCTIONALITY DEMO COMPLETED SUCCESSFULLY!")
+        print("=" * 60)
+        print("\nKey features demonstrated:")
+        print("✓ Delete tasks by ID")
+        print("✓ Proper error handling for non-existent tasks")
+        print("✓ Persistence of delete operations")
+        print("✓ Integration with other task operations")
+        print("✓ Proper cleanup and task count management")
+        
+        return True
         
     except Exception as e:
-        print(f"❌ Demo failed with error: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"\n✗ Demo failed with error: {e}")
         return False
-    
+        
     finally:
-        # Cleanup
+        # Cleanup temporary file
         if os.path.exists(temp_file):
             os.unlink(temp_file)
-            print(f"🧹 Cleaned up temporary file: {temp_file}")
-    
-    return True
-
-def main():
-    """Run the demo."""
-    success = demo_delete_functionality()
-    return 0 if success else 1
+            print(f"\n✓ Cleaned up temporary file: {temp_file}")
 
 if __name__ == "__main__":
-    sys.exit(main())
+    success = demo_delete_functionality()
+    if not success:
+        sys.exit(1)

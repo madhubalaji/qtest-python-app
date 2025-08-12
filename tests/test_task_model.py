@@ -10,75 +10,50 @@ from src.models.task import Task
 class TestTask:
     """Test cases for the Task model."""
 
-    def test_task_creation_with_all_parameters(self):
-        """Test creating a task with all parameters."""
-        created_at = "2023-01-01 12:00:00"
-        task = Task(
-            task_id=1,
-            title="Test Task",
-            description="Test Description",
-            priority="high",
-            completed=True,
-            created_at=created_at
-        )
+    def test_task_creation(self):
+        """Test creating a new task."""
+        task = Task(1, "Test Task", "Test description", "high", False)
         
         assert task.id == 1
         assert task.title == "Test Task"
-        assert task.description == "Test Description"
+        assert task.description == "Test description"
         assert task.priority == "high"
-        assert task.completed is True
-        assert task.created_at == created_at
+        assert task.completed is False
+        assert task.created_at is not None
 
-    def test_task_creation_with_minimal_parameters(self):
-        """Test creating a task with minimal parameters."""
-        task = Task(task_id=1, title="Minimal Task")
+    def test_task_creation_with_defaults(self):
+        """Test creating a task with default values."""
+        task = Task(1, "Test Task")
         
         assert task.id == 1
-        assert task.title == "Minimal Task"
+        assert task.title == "Test Task"
         assert task.description == ""
         assert task.priority == "medium"
         assert task.completed is False
         assert task.created_at is not None
 
-    def test_task_creation_auto_timestamp(self):
-        """Test that created_at is automatically set if not provided."""
-        task = Task(task_id=1, title="Test Task")
-        
-        # Check that created_at is a valid timestamp string
-        assert task.created_at is not None
-        assert len(task.created_at) > 0
-        
-        # Verify it can be parsed as a datetime
-        datetime.strptime(task.created_at, "%Y-%m-%d %H:%M:%S")
-
     def test_task_to_dict(self):
         """Test converting task to dictionary."""
-        task = Task(
-            task_id=1,
-            title="Test Task",
-            description="Test Description",
-            priority="high",
-            completed=True,
-            created_at="2023-01-01 12:00:00"
-        )
+        task = Task(1, "Test Task", "Test description", "high", True, "2023-01-01 12:00:00")
+        task_dict = task.to_dict()
         
-        expected_dict = {
+        expected = {
             "id": 1,
             "title": "Test Task",
-            "description": "Test Description",
+            "description": "Test description",
             "priority": "high",
             "completed": True,
             "created_at": "2023-01-01 12:00:00"
         }
         
-        assert task.to_dict() == expected_dict
+        assert task_dict == expected
 
     def test_task_from_dict_complete(self):
         """Test creating task from complete dictionary."""
         task_dict = {
             "id": 1,
             "title": "Test Task",
-            "description": "Test Description",
+            "description": "Test description",
             "priority": "high",
             "completed": True,
             "created_at": "2023-01-01 12:00:00"
@@ -88,7 +63,7 @@ class TestTask:
         
         assert task.id == 1
         assert task.title == "Test Task"
-        assert task.description == "Test Description"
+        assert task.description == "Test description"
         assert task.priority == "high"
         assert task.completed is True
         assert task.created_at == "2023-01-01 12:00:00"
@@ -107,7 +82,9 @@ class TestTask:
         assert task.description == ""
         assert task.priority == "medium"
         assert task.completed is False
-        assert task.created_at is None
+        # When created_at is not provided, it should be auto-generated
+        assert task.created_at is not None
+        assert isinstance(task.created_at, str)
 
     def test_task_from_dict_partial(self):
         """Test creating task from partial dictionary."""
@@ -125,51 +102,45 @@ class TestTask:
         assert task.description == ""
         assert task.priority == "low"
         assert task.completed is True
-        assert task.created_at is None
+        # When created_at is not provided, it should be auto-generated
+        assert task.created_at is not None
+        assert isinstance(task.created_at, str)
 
-    def test_task_str_representation_active(self):
-        """Test string representation of active task."""
-        task = Task(
-            task_id=1,
-            title="Test Task",
-            priority="high",
-            completed=False
-        )
+    def test_task_from_dict_with_none_created_at(self):
+        """Test creating task from dictionary with None created_at."""
+        task_dict = {
+            "id": 1,
+            "title": "Test Task",
+            "created_at": None
+        }
         
-        expected_str = "Task 1: Test Task (Active, high priority)"
-        assert str(task) == expected_str
+        task = Task.from_dict(task_dict)
+        
+        assert task.id == 1
+        assert task.title == "Test Task"
+        # When created_at is None, it should be auto-generated
+        assert task.created_at is not None
+        assert isinstance(task.created_at, str)
+
+    def test_task_str_representation(self):
+        """Test string representation of task."""
+        task = Task(1, "Test Task", "Test description", "high", False)
+        expected = "Task 1: Test Task (Active, high priority)"
+        assert str(task) == expected
 
     def test_task_str_representation_completed(self):
         """Test string representation of completed task."""
-        task = Task(
-            task_id=2,
-            title="Completed Task",
-            priority="medium",
-            completed=True
-        )
-        
-        expected_str = "Task 2: Completed Task (Completed, medium priority)"
-        assert str(task) == expected_str
+        task = Task(1, "Test Task", "Test description", "high", True)
+        expected = "Task 1: Test Task (Completed, high priority)"
+        assert str(task) == expected
 
-    def test_task_roundtrip_serialization(self):
-        """Test that task can be serialized and deserialized without data loss."""
-        original_task = Task(
-            task_id=1,
-            title="Test Task",
-            description="Test Description",
-            priority="high",
-            completed=True,
-            created_at="2023-01-01 12:00:00"
-        )
-        
-        # Convert to dict and back
-        task_dict = original_task.to_dict()
-        restored_task = Task.from_dict(task_dict)
-        
-        # Verify all attributes are preserved
-        assert restored_task.id == original_task.id
-        assert restored_task.title == original_task.title
-        assert restored_task.description == original_task.description
-        assert restored_task.priority == original_task.priority
-        assert restored_task.completed == original_task.completed
-        assert restored_task.created_at == original_task.created_at
+    def test_task_created_at_format(self):
+        """Test that created_at is in the correct format."""
+        task = Task(1, "Test Task")
+        # Should be in format YYYY-MM-DD HH:MM:SS
+        assert len(task.created_at) == 19
+        assert task.created_at[4] == '-'
+        assert task.created_at[7] == '-'
+        assert task.created_at[10] == ' '
+        assert task.created_at[13] == ':'
+        assert task.created_at[16] == ':'

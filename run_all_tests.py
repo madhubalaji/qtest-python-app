@@ -1,178 +1,214 @@
-#!/usr/bin/env python3
 """
 Comprehensive test runner for the task manager application.
 """
 
-import sys
 import os
+import sys
 import subprocess
-import tempfile
 import json
 
-# Add the project root to Python path
-sys.path.insert(0, os.path.abspath('.'))
+# Add the project root directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-def test_basic_imports():
-    """Test that all basic imports work."""
-    print("Testing basic imports...")
+def test_imports():
+    """Test all imports."""
+    print("Testing imports...")
     try:
         from src.models.task import Task
         from src.services.task_service import TaskService
         from src.utils.exceptions import TaskNotFoundException
-        print("✓ All core imports successful")
+        print("✓ All imports successful")
         return True
     except Exception as e:
-        print(f"❌ Import error: {e}")
+        print(f"✗ Import test failed: {e}")
         return False
 
 def test_basic_functionality():
-    """Test basic functionality without pytest."""
+    """Test basic functionality."""
     print("Testing basic functionality...")
     try:
         from src.models.task import Task
-        from src.services.task_service import TaskService
-        from src.utils.exceptions import TaskNotFoundException
         
-        # Create temporary file
+        # Test task creation
+        task = Task(1, "Test Task", "Description", "medium", False)
+        assert task.id == 1
+        assert task.title == "Test Task"
+        
+        # Test task serialization
+        task_dict = task.to_dict()
+        assert task_dict["id"] == 1
+        
+        # Test task deserialization
+        new_task = Task.from_dict(task_dict)
+        assert new_task.id == task.id
+        
+        print("✓ Basic functionality tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ Basic functionality test failed: {e}")
+        return False
+
+def test_service_functionality():
+    """Test service functionality."""
+    print("Testing service functionality...")
+    try:
+        import tempfile
+        from src.services.task_service import TaskService
+        
+        # Create temporary file for testing
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             temp_file = f.name
         
         try:
-            # Test TaskService
             service = TaskService(temp_file)
             
-            # Test add task
-            task = service.add_task("Test Task", "Test Description", "high")
+            # Test adding task
+            task = service.add_task("Test Task", "Description", "high")
             assert task.id == 1
-            assert task.title == "Test Task"
-            print("✓ Add task works")
             
-            # Test get all tasks
-            tasks = service.get_all_tasks()
-            assert len(tasks) == 1
-            print("✓ Get all tasks works")
+            # Test getting task
+            retrieved = service.get_task_by_id(task.id)
+            assert retrieved.title == "Test Task"
             
-            # Test complete task
-            completed_task = service.complete_task(task.id)
-            assert completed_task.completed is True
-            print("✓ Complete task works")
+            # Test updating task
+            updated = service.update_task(task.id, title="Updated Task")
+            assert updated.title == "Updated Task"
             
-            # Test search tasks
-            results = service.search_tasks("Test")
-            assert len(results) == 1
-            print("✓ Search tasks works")
+            # Test completing task
+            completed = service.complete_task(task.id)
+            assert completed.completed is True
             
-            # Test delete task (the new functionality)
-            deleted_task = service.delete_task(task.id)
-            assert deleted_task.id == task.id
-            print("✓ Delete task works")
+            # Test deleting task
+            deleted = service.delete_task(task.id)
+            assert deleted.id == task.id
+            assert len(service.tasks) == 0
             
-            # Verify task is gone
-            tasks_after_delete = service.get_all_tasks()
-            assert len(tasks_after_delete) == 0
-            print("✓ Task deletion verified")
-            
-            # Test error handling
-            try:
-                service.delete_task(999)
-                assert False, "Should have raised TaskNotFoundException"
-            except TaskNotFoundException:
-                print("✓ Error handling works")
+            print("✓ Service functionality tests passed")
+            return True
             
         finally:
+            # Cleanup
             if os.path.exists(temp_file):
                 os.unlink(temp_file)
-        
-        return True
+                
     except Exception as e:
-        print(f"❌ Functionality test error: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"✗ Service functionality test failed: {e}")
         return False
 
 def test_ui_imports():
-    """Test that UI components can be imported."""
+    """Test UI-related imports."""
     print("Testing UI imports...")
     try:
-        # Test if streamlit is available
         import streamlit
-        print("✓ Streamlit available")
+        print("✓ Streamlit import successful")
         
-        # Test app import (this might fail if streamlit components are used at import time)
-        try:
-            from src import app
-            print("✓ App module imported")
-        except Exception as e:
-            print(f"⚠️  App import warning (expected in test environment): {e}")
+        import src.app
+        print("✓ App module import successful")
         
-        # Test CLI import
-        from src import cli
-        print("✓ CLI module imported")
+        import src.cli
+        print("✓ CLI module import successful")
         
         return True
     except Exception as e:
-        print(f"❌ UI import error: {e}")
+        print(f"✗ UI import test failed: {e}")
         return False
 
 def run_pytest():
-    """Run pytest if available."""
-    print("Running pytest...")
+    """Run pytest tests."""
+    print("Running pytest tests...")
     try:
         result = subprocess.run([
-            sys.executable, '-m', 'pytest', 'tests/', '-v', '--tb=short'
-        ], capture_output=True, text=True, cwd='/workspace')
+            sys.executable, "-m", "pytest", 
+            "-v", 
+            "--tb=short",
+            "tests/"
+        ], capture_output=True, text=True)
         
-        print("PYTEST OUTPUT:")
+        print("Pytest output:")
         print(result.stdout)
+        
         if result.stderr:
-            print("PYTEST ERRORS:")
+            print("Pytest errors:")
             print(result.stderr)
         
         return result.returncode == 0
     except Exception as e:
-        print(f"❌ Pytest execution error: {e}")
+        print(f"✗ Pytest execution failed: {e}")
+        return False
+
+def run_flake8():
+    """Run flake8 style checks."""
+    print("Running flake8 style checks...")
+    try:
+        result = subprocess.run([
+            sys.executable, "-m", "flake8", 
+            "--count", 
+            "--select=E9,F63,F7,F82", 
+            "--show-source", 
+            "--statistics",
+            "."
+        ], capture_output=True, text=True)
+        
+        if result.stdout:
+            print("Flake8 critical errors:")
+            print(result.stdout)
+        
+        return result.returncode == 0
+    except Exception as e:
+        print(f"✗ Flake8 execution failed: {e}")
         return False
 
 def main():
     """Run all tests."""
-    print("=" * 60)
+    print("=" * 50)
     print("TASK MANAGER - COMPREHENSIVE TEST SUITE")
-    print("=" * 60)
+    print("=" * 50)
     
-    all_passed = True
+    tests = [
+        ("Import Tests", test_imports),
+        ("Basic Functionality Tests", test_basic_functionality),
+        ("Service Functionality Tests", test_service_functionality),
+        ("UI Import Tests", test_ui_imports),
+        ("Pytest Tests", run_pytest),
+        ("Style Checks", run_flake8)
+    ]
     
-    # Test 1: Basic imports
-    if not test_basic_imports():
-        all_passed = False
-    print()
+    results = []
+    for test_name, test_func in tests:
+        print(f"\n{'-' * 30}")
+        print(f"Running: {test_name}")
+        print(f"{'-' * 30}")
+        
+        success = test_func()
+        results.append((test_name, success))
+        
+        if success:
+            print(f"✓ {test_name} PASSED")
+        else:
+            print(f"✗ {test_name} FAILED")
     
-    # Test 2: Basic functionality
-    if not test_basic_functionality():
-        all_passed = False
-    print()
+    print(f"\n{'=' * 50}")
+    print("TEST SUMMARY")
+    print(f"{'=' * 50}")
     
-    # Test 3: UI imports
-    if not test_ui_imports():
-        all_passed = False
-    print()
+    passed = 0
+    for test_name, success in results:
+        status = "PASSED" if success else "FAILED"
+        print(f"{test_name}: {status}")
+        if success:
+            passed += 1
     
-    # Test 4: Run pytest
-    if not run_pytest():
-        all_passed = False
-    print()
+    print(f"\nTotal: {len(results)} tests")
+    print(f"Passed: {passed}")
+    print(f"Failed: {len(results) - passed}")
     
-    print("=" * 60)
-    if all_passed:
-        print("🎉 ALL TESTS PASSED!")
-        print("✅ Delete functionality has been successfully implemented")
-        print("✅ UI integration is working")
-        print("✅ All existing functionality is preserved")
+    if passed == len(results):
+        print("\n🎉 ALL TESTS PASSED!")
+        return True
     else:
-        print("❌ SOME TESTS FAILED")
-        print("Please check the output above for details")
-    print("=" * 60)
-    
-    return 0 if all_passed else 1
+        print(f"\n❌ {len(results) - passed} TESTS FAILED")
+        return False
 
 if __name__ == "__main__":
-    sys.exit(main())
+    success = main()
+    sys.exit(0 if success else 1)

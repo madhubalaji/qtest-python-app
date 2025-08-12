@@ -1,1 +1,1 @@
-"""Tests package for the task manager application."""
+# Test package initialization for the task manager application

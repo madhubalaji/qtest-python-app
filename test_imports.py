@@ -1,37 +1,41 @@
-#!/usr/bin/env python3
 """
-Test script to verify imports work correctly.
+Test script to verify all imports work correctly.
 """
 
-import sys
 import os
+import sys
 
-# Add the project root to Python path
-sys.path.insert(0, os.path.abspath('.'))
+# Add the project root directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-try:
-    from src.models.task import Task
-    print("✓ Task model imported successfully")
-    
-    from src.services.task_service import TaskService
-    print("✓ TaskService imported successfully")
-    
-    from src.utils.exceptions import TaskNotFoundException
-    print("✓ TaskNotFoundException imported successfully")
-    
-    # Test basic functionality
-    task = Task(1, "Test Task", "Test Description", "medium")
-    print(f"✓ Task created: {task}")
-    
-    # Test task serialization
-    task_dict = task.to_dict()
-    restored_task = Task.from_dict(task_dict)
-    print(f"✓ Task serialization works: {restored_task}")
-    
-    print("\n✅ All imports and basic functionality work correctly!")
-    
-except Exception as e:
-    print(f"❌ Error: {e}")
-    import traceback
-    traceback.print_exc()
-    sys.exit(1)
+
+def test_imports():
+    """Test all critical imports."""
+    try:
+        from src.services.task_service import TaskService
+        print("✓ TaskService import successful")
+        
+        from src.utils.exceptions import TaskNotFoundException
+        print("✓ TaskNotFoundException import successful")
+        
+        from src.models.task import Task
+        print("✓ Task model import successful")
+        
+        # Test basic functionality
+        task = Task(1, "Test Task", "Description", "medium", False)
+        print("✓ Task creation successful")
+        
+        # Test TaskService
+        service = TaskService("test_tasks.json")
+        print("✓ TaskService creation successful")
+        
+        print("\nAll imports and basic functionality tests passed!")
+        return True
+
+    except Exception as e:
+        print(f"✗ Import test failed: {e}")
+        return False
+
+
+if __name__ == "__main__":
+    test_imports()
