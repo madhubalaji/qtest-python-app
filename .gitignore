@@ -50,7 +50,7 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-pytest-report.html
+pytest-results-*.xml
 
 # Translations
 *.mo
@@ -129,17 +129,21 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Task manager specific files
+# Task manager specific
 tasks.json
-test_tasks.json
-*.json
+config/tasks.json
 
-# IDE files
+# Security reports
+bandit-report.json
+safety-report.json
+trivy-results.sarif
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db

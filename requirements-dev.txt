@@ -1,17 +1,20 @@
 # Development dependencies
+-r requirements.txt
+
+# Testing
 pytest>=7.3.1
 pytest-cov>=4.1.0
 coverage>=7.2.0
+
+# Code quality
 flake8>=6.0.0
 bandit>=1.7.5
 safety>=2.3.0
-black>=23.0.0
-isort>=5.12.0
 
-# Build dependencies
+# Build tools
 build>=0.10.0
-wheel>=0.40.0
-setuptools>=67.0.0
+twine>=4.0.0
+check-manifest>=0.49
 
 # Documentation
 sphinx>=6.0.0

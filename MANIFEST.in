@@ -1,0 +1,11 @@
+include README.md
+include requirements.txt
+include pytest.ini
+recursive-include src *.py
+recursive-include config *.json
+recursive-exclude tests *
+recursive-exclude .github *
+recursive-exclude htmlcov *
+exclude *.pyc
+exclude .coverage
+exclude coverage.xml
