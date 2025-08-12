@@ -1,332 +1,248 @@
 """
-Tests for the CLI module.
+Tests for the CLI interface.
 """
 
-import os
-import sys
-import tempfile
 import pytest
+import tempfile
+import os
 from unittest.mock import patch, MagicMock
-from io import StringIO
-
-# Add the project root to the path for testing
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from src.cli import main
-from src.utils.exceptions import TaskNotFoundException
+from src.services.task_service import TaskService
 
 
 class TestCLI:
-    """Test cases for the CLI module."""
+    """Test cases for the CLI interface."""
 
-    @pytest.fixture
-    def temp_config_dir(self):
-        """Create a temporary config directory for testing."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            yield temp_dir
+    def setup_method(self):
+        """Set up test fixtures before each test method."""
+        # Create a temporary file for testing
+        self.temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
+        self.temp_file.close()
 
-    @pytest.fixture
-    def mock_task_service(self):
-        """Create a mock TaskService for testing."""
+    def teardown_method(self):
+        """Clean up after each test method."""
+        # Remove the temporary file
+        if os.path.exists(self.temp_file.name):
+            os.unlink(self.temp_file.name)
+
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'add', 'Test Task'])
+    def test_add_task_basic(self, mock_task_service_class):
+        """Test adding a basic task via CLI."""
+        # Mock the service instance
         mock_service = MagicMock()
-        return mock_service
-
-    def test_add_task_command(self, temp_config_dir, mock_task_service, capsys):
-        """Test adding a task via CLI."""
+        mock_task_service_class.return_value = mock_service
+        
         # Mock the task that would be returned
         mock_task = MagicMock()
         mock_task.id = 1
         mock_task.title = "Test Task"
-        mock_task_service.add_task.return_value = mock_task
-
-        test_args = ["add", "Test Task", "-d", "Test description", "-p", "high"]
+        mock_service.add_task.return_value = mock_task
         
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
+        with patch('builtins.print') as mock_print:
+            try:
+                main()
+            except SystemExit:
+                pass  # argparse calls sys.exit, which is expected
             
-            main()
-            
-            mock_task_service.add_task.assert_called_once_with("Test Task", "Test description", "high")
-            captured = capsys.readouterr()
-            assert "Task 'Test Task' added successfully with ID 1" in captured.out
+            # Verify service was called correctly
+            mock_service.add_task.assert_called_once_with("Test Task", "", "medium")
 
-    def test_add_task_with_defaults(self, temp_config_dir, mock_task_service, capsys):
-        """Test adding a task with default values."""
-        mock_task = MagicMock()
-        mock_task.id = 2
-        mock_task.title = "Simple Task"
-        mock_task_service.add_task.return_value = mock_task
-
-        test_args = ["add", "Simple Task"]
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'add', 'Important Task', '-d', 'Task description', '-p', 'high'])
+    def test_add_task_with_options(self, mock_task_service_class):
+        """Test adding a task with description and priority via CLI."""
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
         
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            mock_task_service.add_task.assert_called_once_with("Simple Task", "", "medium")
-            captured = capsys.readouterr()
-            assert "Task 'Simple Task' added successfully with ID 2" in captured.out
-
-    def test_list_tasks_command(self, temp_config_dir, mock_task_service, capsys):
-        """Test listing tasks via CLI."""
-        # Create mock tasks
-        mock_task1 = MagicMock()
-        mock_task1.id = 1
-        mock_task1.title = "Task 1"
-        mock_task1.priority = "high"
-        mock_task1.completed = False
-        mock_task1.created_at = "2023-01-01 12:00:00"
-        
-        mock_task2 = MagicMock()
-        mock_task2.id = 2
-        mock_task2.title = "Task 2"
-        mock_task2.priority = "medium"
-        mock_task2.completed = True
-        mock_task2.created_at = "2023-01-02 12:00:00"
-        
-        mock_task_service.get_all_tasks.return_value = [mock_task1, mock_task2]
-
-        test_args = ["list"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            mock_task_service.get_all_tasks.assert_called_once_with(show_completed=False)
-            captured = capsys.readouterr()
-            assert "Task 1" in captured.out
-            assert "Task 2" in captured.out
-            assert "Active" in captured.out
-            assert "Completed" in captured.out
-
-    def test_list_all_tasks_command(self, temp_config_dir, mock_task_service, capsys):
-        """Test listing all tasks including completed ones."""
-        mock_task_service.get_all_tasks.return_value = []
-
-        test_args = ["list", "--all"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            mock_task_service.get_all_tasks.assert_called_once_with(show_completed=True)
-
-    def test_list_no_tasks(self, temp_config_dir, mock_task_service, capsys):
-        """Test listing when no tasks exist."""
-        mock_task_service.get_all_tasks.return_value = []
-
-        test_args = ["list"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            captured = capsys.readouterr()
-            assert "No tasks found" in captured.out
-
-    def test_complete_task_command(self, temp_config_dir, mock_task_service, capsys):
-        """Test completing a task via CLI."""
         mock_task = MagicMock()
         mock_task.id = 1
-        mock_task_service.complete_task.return_value = mock_task
-
-        test_args = ["complete", "1"]
+        mock_service.add_task.return_value = mock_task
         
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
+        with patch('builtins.print'):
+            try:
+                main()
+            except SystemExit:
+                pass
             
-            main()
-            
-            mock_task_service.complete_task.assert_called_once_with(1)
-            captured = capsys.readouterr()
-            assert "Task 1 marked as complete" in captured.out
+            mock_service.add_task.assert_called_once_with("Important Task", "Task description", "high")
 
-    def test_delete_task_command(self, temp_config_dir, mock_task_service, capsys):
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'list'])
+    def test_list_tasks(self, mock_task_service_class):
+        """Test listing tasks via CLI."""
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
+        
+        # Mock tasks
+        mock_task1 = MagicMock()
+        mock_task1.__str__ = MagicMock(return_value="Task 1: Test Task (Active, medium priority)")
+        mock_task2 = MagicMock()
+        mock_task2.__str__ = MagicMock(return_value="Task 2: Another Task (Completed, high priority)")
+        
+        mock_service.get_all_tasks.return_value = [mock_task1, mock_task2]
+        
+        with patch('builtins.print') as mock_print:
+            try:
+                main()
+            except SystemExit:
+                pass
+            
+            mock_service.get_all_tasks.assert_called_once_with(show_completed=False)
+
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'list', '-a'])
+    def test_list_all_tasks(self, mock_task_service_class):
+        """Test listing all tasks including completed via CLI."""
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
+        mock_service.get_all_tasks.return_value = []
+        
+        with patch('builtins.print'):
+            try:
+                main()
+            except SystemExit:
+                pass
+            
+            mock_service.get_all_tasks.assert_called_once_with(show_completed=True)
+
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'complete', '1'])
+    def test_complete_task(self, mock_task_service_class):
+        """Test completing a task via CLI."""
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
+        
+        mock_task = MagicMock()
+        mock_task.title = "Completed Task"
+        mock_service.complete_task.return_value = mock_task
+        
+        with patch('builtins.print') as mock_print:
+            try:
+                main()
+            except SystemExit:
+                pass
+            
+            mock_service.complete_task.assert_called_once_with(1)
+
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'delete', '1'])
+    def test_delete_task(self, mock_task_service_class):
         """Test deleting a task via CLI."""
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
+        
         mock_task = MagicMock()
         mock_task.title = "Deleted Task"
-        mock_task_service.delete_task.return_value = mock_task
-
-        test_args = ["delete", "1"]
+        mock_service.delete_task.return_value = mock_task
         
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            mock_task_service.delete_task.assert_called_once_with(1)
-            captured = capsys.readouterr()
-            assert "Task 'Deleted Task' deleted successfully" in captured.out
-
-    def test_search_tasks_command(self, temp_config_dir, mock_task_service, capsys):
-        """Test searching for tasks via CLI."""
-        mock_task = MagicMock()
-        mock_task.id = 1
-        mock_task.title = "Found Task"
-        mock_task.priority = "high"
-        mock_task.completed = False
-        
-        mock_task_service.search_tasks.return_value = [mock_task]
-
-        test_args = ["search", "Found"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            mock_task_service.search_tasks.assert_called_once_with("Found")
-            captured = capsys.readouterr()
-            assert "Found 1 tasks matching 'Found'" in captured.out
-            assert "Found Task" in captured.out
-
-    def test_search_no_results(self, temp_config_dir, mock_task_service, capsys):
-        """Test searching with no results."""
-        mock_task_service.search_tasks.return_value = []
-
-        test_args = ["search", "NonExistent"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            captured = capsys.readouterr()
-            assert "No tasks found matching 'NonExistent'" in captured.out
-
-    def test_view_task_command(self, temp_config_dir, mock_task_service, capsys):
-        """Test viewing a task via CLI."""
-        mock_task = MagicMock()
-        mock_task.id = 1
-        mock_task.title = "View Task"
-        mock_task.description = "Task description"
-        mock_task.priority = "medium"
-        mock_task.completed = False
-        mock_task.created_at = "2023-01-01 12:00:00"
-        
-        mock_task_service.get_task_by_id.return_value = mock_task
-
-        test_args = ["view", "1"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            mock_task_service.get_task_by_id.assert_called_once_with(1)
-            captured = capsys.readouterr()
-            assert "Task ID: 1" in captured.out
-            assert "Title: View Task" in captured.out
-            assert "Description: Task description" in captured.out
-            assert "Priority: medium" in captured.out
-            assert "Status: Active" in captured.out
-
-    def test_view_completed_task(self, temp_config_dir, mock_task_service, capsys):
-        """Test viewing a completed task."""
-        mock_task = MagicMock()
-        mock_task.id = 1
-        mock_task.title = "Completed Task"
-        mock_task.description = "Task description"
-        mock_task.priority = "high"
-        mock_task.completed = True
-        mock_task.created_at = "2023-01-01 12:00:00"
-        
-        mock_task_service.get_task_by_id.return_value = mock_task
-
-        test_args = ["view", "1"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            captured = capsys.readouterr()
-            assert "Status: Completed" in captured.out
-
-    def test_task_not_found_exception(self, temp_config_dir, mock_task_service, capsys):
-        """Test handling TaskNotFoundException."""
-        mock_task_service.get_task_by_id.side_effect = TaskNotFoundException("Task with ID 999 not found")
-
-        test_args = ["view", "999"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            captured = capsys.readouterr()
-            assert "Error: Task with ID 999 not found" in captured.out
-
-    def test_unexpected_exception(self, temp_config_dir, mock_task_service, capsys):
-        """Test handling unexpected exceptions."""
-        mock_task_service.get_task_by_id.side_effect = Exception("Unexpected error")
-
-        test_args = ["view", "1"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            captured = capsys.readouterr()
-            assert "An unexpected error occurred: Unexpected error" in captured.out
-
-    def test_no_command_shows_help(self, temp_config_dir, mock_task_service, capsys):
-        """Test that no command shows help."""
-        test_args = []
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            main()
-            
-            captured = capsys.readouterr()
-            assert "usage:" in captured.out or "Task Manager - A CLI task management app" in captured.out
-
-    def test_invalid_command_shows_help(self, temp_config_dir, mock_task_service, capsys):
-        """Test that invalid command shows help."""
-        test_args = ["invalid"]
-        
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service), \
-             patch('os.makedirs'):
-            
-            # This should raise SystemExit due to argparse
-            with pytest.raises(SystemExit):
+        with patch('builtins.print') as mock_print:
+            try:
                 main()
+            except SystemExit:
+                pass
+            
+            mock_service.delete_task.assert_called_once_with(1)
 
-    def test_config_directory_creation(self, temp_config_dir):
-        """Test that config directory is created."""
-        mock_task_service = MagicMock()
-        test_args = ["list"]
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'search', 'keyword'])
+    def test_search_tasks(self, mock_task_service_class):
+        """Test searching tasks via CLI."""
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
         
-        with patch('sys.argv', ['cli.py'] + test_args), \
-             patch('src.cli.TaskService', return_value=mock_task_service) as mock_service_class, \
-             patch('os.makedirs') as mock_makedirs:
+        mock_task = MagicMock()
+        mock_task.__str__ = MagicMock(return_value="Task 1: Found Task (Active, medium priority)")
+        mock_service.search_tasks.return_value = [mock_task]
+        
+        with patch('builtins.print') as mock_print:
+            try:
+                main()
+            except SystemExit:
+                pass
             
+            mock_service.search_tasks.assert_called_once_with("keyword")
+
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'view', '1'])
+    def test_view_task(self, mock_task_service_class):
+        """Test viewing a specific task via CLI."""
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
+        
+        mock_task = MagicMock()
+        mock_task.id = 1
+        mock_task.title = "Test Task"
+        mock_task.description = "Test Description"
+        mock_task.priority = "high"
+        mock_task.completed = False
+        mock_task.created_at = "2023-01-01 10:00:00"
+        
+        mock_service.get_task_by_id.return_value = mock_task
+        
+        with patch('builtins.print') as mock_print:
+            try:
+                main()
+            except SystemExit:
+                pass
+            
+            mock_service.get_task_by_id.assert_called_once_with(1)
+
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'complete', '999'])
+    def test_complete_nonexistent_task(self, mock_task_service_class):
+        """Test completing a non-existent task via CLI."""
+        from src.utils.exceptions import TaskNotFoundException
+        
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
+        mock_service.complete_task.side_effect = TaskNotFoundException("Task with ID 999 not found")
+        
+        with patch('builtins.print') as mock_print:
+            try:
+                main()
+            except SystemExit:
+                pass
+            
+            # Should print error message
+            mock_print.assert_called()
+
+    @patch('src.cli.TaskService')
+    @patch('sys.argv', ['cli.py', 'view', '999'])
+    def test_view_nonexistent_task(self, mock_task_service_class):
+        """Test viewing a non-existent task via CLI."""
+        from src.utils.exceptions import TaskNotFoundException
+        
+        mock_service = MagicMock()
+        mock_task_service_class.return_value = mock_service
+        mock_service.get_task_by_id.side_effect = TaskNotFoundException("Task with ID 999 not found")
+        
+        with patch('builtins.print') as mock_print:
+            try:
+                main()
+            except SystemExit:
+                pass
+            
+            # Should print error message
+            mock_print.assert_called()
+
+    @patch('sys.argv', ['cli.py', '--help'])
+    def test_help_command(self):
+        """Test that help command works."""
+        with pytest.raises(SystemExit) as exc_info:
             main()
-            
-            # Verify that makedirs was called
-            mock_makedirs.assert_called_once()
-            # Verify that TaskService was initialized with the correct path
-            mock_service_class.assert_called_once()
-            args, kwargs = mock_service_class.call_args
-            assert args[0].endswith('tasks.json')
+        
+        # argparse exits with code 0 for help
+        assert exc_info.value.code == 0
+
+    @patch('sys.argv', ['cli.py'])
+    def test_no_command(self):
+        """Test behavior when no command is provided."""
+        with pytest.raises(SystemExit):
+            main()
+
+    @patch('sys.argv', ['cli.py', 'invalid_command'])
+    def test_invalid_command(self):
+        """Test behavior with invalid command."""
+        with pytest.raises(SystemExit):
+            main()

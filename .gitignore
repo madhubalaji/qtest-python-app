@@ -50,7 +50,6 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-pytest-results-*.xml
 
 # Translations
 *.mo
@@ -130,20 +129,22 @@ dmypy.json
 .pyre/
 
 # Task manager specific
-tasks.json
 config/tasks.json
-
-# Security reports
-bandit-report.json
-safety-report.json
-trivy-results.sarif
+*.json
+!config/tasks.json.example
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db

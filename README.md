@@ -1,5 +1,9 @@
 # Task Manager
 
+[![Python application](https://github.com/example/task-manager/actions/workflows/python-app.yml/badge.svg)](https://github.com/example/task-manager/actions/workflows/python-app.yml)
+[![Security Scan](https://github.com/example/task-manager/actions/workflows/security.yml/badge.svg)](https://github.com/example/task-manager/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/example/task-manager/branch/main/graph/badge.svg)](https://codecov.io/gh/example/task-manager)
+
 A simple task management application with both CLI and web interfaces.
 
 ## Features
@@ -15,9 +19,6 @@ A simple task management application with both CLI and web interfaces.
 
 ```
 task_manager_project/
-├── .github/                # GitHub Actions workflows
-│   └── workflows/
-│       └── python-app.yml  # CI/CD pipeline
 ├── config/                 # Configuration files and task storage
 ├── docs/                   # Documentation
 ├── src/                    # Source code
@@ -31,13 +32,8 @@ task_manager_project/
 │   └── cli.py              # Command-line interface
 ├── tests/                  # Test cases
 │   ├── test_task_model.py  # Tests for Task model
-│   ├── test_task_service.py# Tests for TaskService
-│   └── test_integration.py # Integration tests
-├── requirements.txt        # Project dependencies
-├── requirements-dev.txt    # Development dependencies
-├── pytest.ini            # Pytest configuration
-├── MANIFEST.in            # Package manifest
-└── run_tests.py           # Local test runner
+│   └── test_task_service.py# Tests for TaskService
+└── requirements.txt        # Project dependencies
 ```
 
 ## Installation
@@ -51,11 +47,6 @@ task_manager_project/
 2. Install dependencies:
    ```
    pip install -r requirements.txt
-   ```
-
-3. For development, install additional dependencies:
-   ```
-   pip install -r requirements-dev.txt
    ```
 
 ## Usage
@@ -93,121 +84,108 @@ The web interface provides the following pages:
 
 ## Testing
 
-### Running Tests Locally
+Run the tests:
 
-Run all tests:
 ```bash
 pytest
 ```
 
 Run tests with coverage:
+
 ```bash
-pytest --cov=src --cov-report=html
+pytest --cov=src --cov-report=html --cov-report=term-missing
 ```
 
-Run specific test files:
+Run specific test categories:
+
 ```bash
-pytest tests/test_task_model.py
-pytest tests/test_task_service.py
-pytest tests/test_integration.py
+# Run only unit tests
+pytest -m unit
+
+# Run only integration tests  
+pytest -m integration
+
+# Skip slow tests
+pytest -m "not slow"
 ```
-
-Use the test runner script:
-```bash
-python run_tests.py
-```
-
-### Test Structure
-
-- **Unit Tests**: Test individual components in isolation
-  - `test_task_model.py`: Tests for the Task model class
-  - `test_task_service.py`: Tests for the TaskService class
-- **Integration Tests**: Test component interactions
-  - `test_integration.py`: CLI and application integration tests
-
-### Coverage Requirements
-
-The project maintains a minimum code coverage of 85%. Coverage reports are generated in:
-- HTML format: `htmlcov/index.html`
-- XML format: `coverage.xml`
-- Terminal output with missing lines
-
-## CI/CD Pipeline
-
-The project uses GitHub Actions for continuous integration and deployment. The workflow includes:
-
-### Automated Testing
-- **Multi-version Testing**: Tests run on Python 3.8, 3.9, 3.10, and 3.11
-- **Unit Tests**: Comprehensive test suite with pytest
-- **Code Coverage**: Automated coverage reporting with minimum thresholds
-- **Integration Tests**: CLI and application functionality validation
-
-### Code Quality Checks
-- **Linting**: Code style validation with flake8
-- **Security Scanning**: 
-  - Bandit for Python security issues
-  - Safety for dependency vulnerabilities
-  - Trivy for comprehensive security scanning
-- **Package Validation**: Build and distribution checks
-
-### Artifact Management
-- **Test Results**: JUnit XML reports for all Python versions
-- **Coverage Reports**: HTML and XML coverage reports
-- **Security Reports**: JSON reports from security scans
-- **Build Artifacts**: Python package distributions
-
-### Workflow Triggers
-- **Push Events**: Runs on pushes to `main` and `develop` branches
-- **Pull Requests**: Runs on PRs targeting `main` branch
-- **Security Scans**: Additional security checks on push events
-
-### Quality Gates
-The pipeline enforces quality gates that must pass:
-- All unit tests must pass across all Python versions
-- Code coverage must meet minimum thresholds (85%)
-- No high-severity security vulnerabilities
-- Code style checks must pass
-- Package must build successfully
-
-### Workflow Jobs
-
-1. **Test Job**: Runs tests across multiple Python versions with caching
-2. **Build Job**: Validates package building and distribution
-3. **Integration Test Job**: Tests CLI functionality and package installation
-4. **Security Scan Job**: Comprehensive security vulnerability scanning
-5. **Quality Gate Job**: Final validation of all quality requirements
 
 ## Development
 
-### Setting up Development Environment
+### Setting up development environment
 
-1. Clone the repository
-2. Install development dependencies: `pip install -r requirements-dev.txt`
-3. Run tests to verify setup: `python run_tests.py`
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd task_manager_project
+   ```
 
-### Code Style
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-The project follows PEP 8 style guidelines. Use flake8 for linting:
+3. Install development dependencies:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+### Code Quality
+
+The project uses several tools to maintain code quality:
+
+- **pytest**: Testing framework with coverage reporting
+- **flake8**: Code linting and style checking
+- **black**: Code formatting
+- **isort**: Import sorting
+- **mypy**: Static type checking
+- **bandit**: Security vulnerability scanning
+- **safety**: Dependency vulnerability checking
+
+Run all quality checks:
+
 ```bash
+# Linting
 flake8 src/ tests/
+
+# Type checking
+mypy src/
+
+# Security scanning
+bandit -r src/
+safety check
+
+# Code formatting (check only)
+black --check src/ tests/
+isort --check-only src/ tests/
 ```
 
-### Security
+### CI/CD Pipeline
 
-Security is validated through multiple tools:
-- **Bandit**: Scans for common security issues in Python code
-- **Safety**: Checks dependencies for known vulnerabilities
-- **Trivy**: Comprehensive vulnerability scanning
+The project uses GitHub Actions for continuous integration with the following workflows:
 
-### Contributing
+1. **Main CI Pipeline** (`.github/workflows/python-app.yml`):
+   - Tests across Python 3.9, 3.10, 3.11, and 3.12
+   - Code linting with flake8
+   - Test coverage reporting
+   - Build artifact generation
+   - Dependency caching for faster builds
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `python run_tests.py`
-5. Submit a pull request
+2. **Security Scanning** (`.github/workflows/security.yml`):
+   - Daily security scans
+   - Dependency vulnerability checking
+   - Static security analysis
+   - SAST scanning with Semgrep
 
-The CI/CD pipeline will automatically run all tests and quality checks on your pull request.
+### Build and Packaging
+
+Build the package:
+
+```bash
+python -m build
+```
+
+The built packages will be available in the `dist/` directory.
 
 ## License
 
