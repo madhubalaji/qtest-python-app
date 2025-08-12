@@ -22,6 +22,8 @@ class TaskService:
         """
         self.storage_file = storage_file
         self.tasks = self._load_tasks()
+        # Track the highest ID ever used to prevent ID reuse
+        self._next_id = max([task.id for task in self.tasks], default=0) + 1
 
     def _load_tasks(self) -> List[Task]:
         """
@@ -58,7 +60,8 @@ class TaskService:
         Returns:
             The newly created Task
         """
-        task_id = max([task.id for task in self.tasks], default=0) + 1
+        task_id = self._next_id
+        self._next_id += 1
         task = Task(task_id, title, description, priority)
         self.tasks.append(task)
         self._save_tasks()
