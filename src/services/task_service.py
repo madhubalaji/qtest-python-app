@@ -4,7 +4,7 @@ Task service for managing task operations.
 
 import os
 import json
-from typing import List, Dict, Any, Optional
+from typing import List
 
 from src.models.task import Task
 from src.utils.exceptions import TaskNotFoundException
@@ -22,6 +22,8 @@ class TaskService:
         """
         self.storage_file = storage_file
         self.tasks = self._load_tasks()
+        # Initialize next_id to ensure unique IDs are never reused
+        self.next_id = max([task.id for task in self.tasks], default=0) + 1
 
     def _load_tasks(self) -> List[Task]:
         """
@@ -37,7 +39,7 @@ class TaskService:
                     task_dicts = json.load(f)
                     tasks = [Task.from_dict(task_dict) for task_dict in task_dicts]
             except json.JSONDecodeError:
-                print(f"Error reading task file. Starting with empty task list.")
+                print("Error reading task file. Starting with empty task list.")
         return tasks
 
     def _save_tasks(self) -> None:
@@ -58,7 +60,8 @@ class TaskService:
         Returns:
             The newly created Task
         """
-        task_id = max([task.id for task in self.tasks], default=0) + 1
+        task_id = self.next_id
+        self.next_id += 1
         task = Task(task_id, title, description, priority)
         self.tasks.append(task)
         self._save_tasks()
@@ -111,7 +114,7 @@ class TaskService:
             TaskNotFoundException: If no task with the given ID exists
         """
         task = self.get_task_by_id(task_id)
-        
+
         if "title" in kwargs:
             task.title = kwargs["title"]
         if "description" in kwargs:
@@ -120,7 +123,7 @@ class TaskService:
             task.priority = kwargs["priority"]
         if "completed" in kwargs:
             task.completed = kwargs["completed"]
-            
+
         self._save_tasks()
         return task
 

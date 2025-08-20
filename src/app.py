@@ -74,52 +74,52 @@ def display_tasks_page(task_service):
     for task in tasks:
         with st.container():
             col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-            
+
             with col1:
                 if task.completed:
                     st.markdown(f"~~**{task.title}**~~")
                 else:
                     st.markdown(f"**{task.title}**")
-                
+
                 with st.expander("Details"):
                     st.write(f"**Description:** {task.description}")
                     st.write(f"**Created at:** {task.created_at}")
-            
+
             with col2:
                 priority_color = {
                     "low": "blue",
                     "medium": "orange",
                     "high": "red"
                 }.get(task.priority.lower(), "gray")
-                
+
                 st.markdown(
                     f"<span style='color:{priority_color};font-weight:bold;'>{task.priority.upper()}</span>",
                     unsafe_allow_html=True
                 )
-            
+
             with col3:
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                     task_service.complete_task(task.id)
                     st.experimental_rerun()
-            
+
             with col4:
                 if st.button("🗑️", key=f"delete_{task.id}", help="Delete task"):
                     # Store the task to be deleted in session state for confirmation
                     st.session_state.task_to_delete = task.id
                     st.experimental_rerun()
-            
+
             st.divider()
-    
+
     # Handle task deletion confirmation
     if hasattr(st.session_state, 'task_to_delete'):
         try:
             task_to_delete = task_service.get_task_by_id(st.session_state.task_to_delete)
-            
+
             st.warning(f"⚠️ Are you sure you want to delete the task: **{task_to_delete.title}**?")
             st.write("This action cannot be undone.")
-            
+
             col1, col2, col3 = st.columns([1, 1, 2])
-            
+
             with col1:
                 if st.button("Yes, Delete", type="primary"):
                     try:
@@ -131,12 +131,12 @@ def display_tasks_page(task_service):
                         st.error("Task not found. It may have already been deleted.")
                         del st.session_state.task_to_delete
                         st.experimental_rerun()
-            
+
             with col2:
                 if st.button("Cancel"):
                     del st.session_state.task_to_delete
                     st.experimental_rerun()
-                    
+
         except TaskNotFoundException:
             st.error("Task not found. It may have already been deleted.")
             del st.session_state.task_to_delete
@@ -215,38 +215,38 @@ def search_tasks_page(task_service):
             st.write(f"**Priority:** {task.priority}")
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
-            
+
             col1, col2, col3 = st.columns(3)
-            
+
             with col1:
                 if not task.completed and st.button("Mark as Complete"):
                     task_service.complete_task(task.id)
                     st.experimental_rerun()
-            
+
             with col2:
                 if st.button("Delete Task", type="secondary"):
                     st.session_state.task_to_delete_from_search = task.id
                     st.experimental_rerun()
-            
+
             with col3:
                 if st.button("Close"):
                     del st.session_state.task_to_view
                     st.experimental_rerun()
-                
+
         except TaskNotFoundException:
             st.error("Task not found")
             del st.session_state.task_to_view
-    
+
     # Handle task deletion confirmation from search page
     if hasattr(st.session_state, 'task_to_delete_from_search'):
         try:
             task_to_delete = task_service.get_task_by_id(st.session_state.task_to_delete_from_search)
-            
+
             st.warning(f"⚠️ Are you sure you want to delete the task: **{task_to_delete.title}**?")
             st.write("This action cannot be undone.")
-            
+
             col1, col2, col3 = st.columns([1, 1, 2])
-            
+
             with col1:
                 if st.button("Yes, Delete Task", type="primary"):
                     try:
@@ -263,12 +263,12 @@ def search_tasks_page(task_service):
                         if hasattr(st.session_state, 'task_to_view'):
                             del st.session_state.task_to_view
                         st.experimental_rerun()
-            
+
             with col2:
                 if st.button("Cancel Delete"):
                     del st.session_state.task_to_delete_from_search
                     st.experimental_rerun()
-                    
+
         except TaskNotFoundException:
             st.error("Task not found. It may have already been deleted.")
             del st.session_state.task_to_delete_from_search
