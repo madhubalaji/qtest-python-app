@@ -6,6 +6,7 @@ A simple task management application with both CLI and web interfaces.
 
 - Add, view, update the tasks
 - Mark tasks as complete
+- **Delete tasks with confirmation dialog** ✨ *New Feature*
 - Search for tasks by keyword
 - Filter tasks by status and priority
 - Command-line interface for quick task management
@@ -16,7 +17,6 @@ A simple task management application with both CLI and web interfaces.
 ```
 task_manager_project/
 ├── config/                 # Configuration files and task storage
-├── docs/                   # Documentation
 ├── src/                    # Source code
 │   ├── models/             # Data models
 │   │   └── task.py         # Task model
@@ -26,7 +26,11 @@ task_manager_project/
 │   │   └── exceptions.py   # Custom exceptions
 │   ├── app.py              # Streamlit web application
 │   └── cli.py              # Command-line interface
-└── requirements.txt        # Project dependencies
+├── tests/                  # Unit and integration tests
+│   ├── test_task_service.py    # TaskService tests
+│   └── test_app_integration.py # Integration tests
+├── requirements.txt        # Project dependencies
+└── run_tests.py           # Test runner script
 ```
 
 ## Installation
@@ -71,11 +75,54 @@ streamlit run src/app.py
 ```
 
 The web interface provides the following pages:
-- View Tasks: Display and manage all tasks
-- Add Task: Create new tasks
-- Search Tasks: Find tasks by keyword
+- **View Tasks**: Display and manage all tasks with delete functionality 🗑️
+- **Add Task**: Create new tasks
+- **Search Tasks**: Find tasks by keyword with delete option in task details
 
+#### 🗑️ Delete Task Feature
 
+The new delete functionality is available in two locations:
+
+1. **View Tasks Page**:
+   - Click the 🗑️ (trash) button next to any task
+   - Confirm deletion in the warning dialog
+   - Task is permanently removed from the list
+
+2. **Search Tasks Page**:
+   - Search for a task and click "View" to see details
+   - Click "Delete Task" button in the task details view
+   - Confirm deletion in the warning dialog
+
+**Important Notes**:
+- ⚠️ Deletion is permanent and cannot be undone
+- 🔒 Confirmation dialog prevents accidental deletions
+- ✅ Works for both completed and active tasks
+- 💾 Changes are immediately saved to storage
+
+## Testing
+
+Run the test suite to verify functionality:
+
+```
+python run_tests.py
+```
+
+Or run individual test files:
+
+```
+python -m pytest tests/test_task_service.py
+python -m pytest tests/test_app_integration.py
+```
+
+## Demo
+
+To see the delete feature in action:
+
+```
+python demo_delete_feature.py
+```
+
+This will show current tasks and explain how to use the delete functionality.
 
 ## License
 
