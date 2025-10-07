@@ -4,10 +4,11 @@ A simple task management application with both CLI and web interfaces.
 
 ## Features
 
-- Add, view, update the tasks
+- Add, view, update and **delete** tasks
 - Mark tasks as complete
 - Search for tasks by keyword
 - Filter tasks by status and priority
+- **Delete tasks with confirmation dialogs** (NEW!)
 - Command-line interface for quick task management
 - Web interface built with Streamlit for a user-friendly experience
 
@@ -16,7 +17,6 @@ A simple task management application with both CLI and web interfaces.
 ```
 task_manager_project/
 ├── config/                 # Configuration files and task storage
-├── docs/                   # Documentation
 ├── src/                    # Source code
 │   ├── models/             # Data models
 │   │   └── task.py         # Task model
@@ -26,7 +26,14 @@ task_manager_project/
 │   │   └── exceptions.py   # Custom exceptions
 │   ├── app.py              # Streamlit web application
 │   └── cli.py              # Command-line interface
-└── requirements.txt        # Project dependencies
+├── tests/                  # Test suite
+│   ├── test_task_service.py # TaskService tests
+│   ├── test_models.py      # Task model tests
+│   └── test_exceptions.py  # Exception handling tests
+├── requirements.txt        # Project dependencies
+├── pytest.ini             # Pytest configuration
+├── run_tests.py           # Test runner script
+└── demo_delete_functionality.py # Delete functionality demo
 ```
 
 ## Installation
@@ -71,9 +78,51 @@ streamlit run src/app.py
 ```
 
 The web interface provides the following pages:
-- View Tasks: Display and manage all tasks
-- Add Task: Create new tasks
-- Search Tasks: Find tasks by keyword
+- **View Tasks**: Display and manage all tasks with **delete functionality**
+- **Add Task**: Create new tasks
+- **Search Tasks**: Find tasks by keyword with **delete option in task details**
+
+### New Delete Functionality
+
+The web interface now includes comprehensive delete functionality:
+
+#### In View Tasks Page:
+- 🗑️ **Delete button** for each task
+- **Confirmation dialog** before deletion
+- **Success/error messages** for user feedback
+- **Immediate UI refresh** after deletion
+
+#### In Search Tasks Page:
+- **Delete option** in task detail view
+- **Confirmation dialog** with cancel option
+- **Proper cleanup** of UI state after deletion
+
+#### Safety Features:
+- **Confirmation required** before any deletion
+- **Error handling** for non-existent tasks
+- **Clear user feedback** for all operations
+- **Session state management** to prevent conflicts
+
+## Testing
+
+Run the test suite to verify functionality:
+
+```bash
+# Run all tests
+python run_tests.py
+
+# Or run pytest directly
+pytest tests/ -v
+
+# Demo the delete functionality
+python demo_delete_functionality.py
+```
+
+The test suite includes:
+- **TaskService tests**: Comprehensive testing of all CRUD operations including delete
+- **Task model tests**: Validation of task creation and serialization
+- **Exception handling tests**: Proper error handling verification
+- **Integration tests**: End-to-end functionality validation
 
 
 
