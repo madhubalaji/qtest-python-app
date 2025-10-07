@@ -73,7 +73,7 @@ def display_tasks_page(task_service):
     # Display tasks
     for task in tasks:
         with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
             
             with col1:
                 if task.completed:
@@ -101,6 +101,33 @@ def display_tasks_page(task_service):
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                     task_service.complete_task(task.id)
                     st.experimental_rerun()
+            
+            with col4:
+                # Confirmation mechanism for delete
+                confirm_key = f"confirm_delete_{task.id}"
+                if confirm_key in st.session_state and st.session_state[confirm_key]:
+                    # Show confirmation buttons
+                    col4a, col4b = st.columns(2)
+                    with col4a:
+                        if st.button("Sí", key=f"yes_delete_{task.id}"):
+                            try:
+                                task_service.delete_task(task.id)
+                                st.success(f"Tarea '{task.title}' eliminada exitosamente")
+                                # Clean up session state
+                                if confirm_key in st.session_state:
+                                    del st.session_state[confirm_key]
+                                st.experimental_rerun()
+                            except TaskNotFoundException:
+                                st.error("Tarea no encontrada")
+                    with col4b:
+                        if st.button("No", key=f"no_delete_{task.id}"):
+                            st.session_state[confirm_key] = False
+                            st.experimental_rerun()
+                else:
+                    # Show delete button
+                    if st.button("🗑️", key=f"delete_{task.id}", help="Eliminar tarea"):
+                        st.session_state[confirm_key] = True
+                        st.experimental_rerun()
             
             st.divider()
 
@@ -178,15 +205,41 @@ def search_tasks_page(task_service):
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
             
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
-                if not task.completed and st.button("Mark as Complete"):
+                if not task.completed and st.button("Marcar como Completada"):
                     task_service.complete_task(task.id)
                     st.experimental_rerun()
             
             with col2:
-                if st.button("Close"):
+                # Delete confirmation for task details view
+                detail_confirm_key = f"detail_confirm_delete_{task.id}"
+                if detail_confirm_key in st.session_state and st.session_state[detail_confirm_key]:
+                    # Show confirmation
+                    if st.button("⚠️ Confirmar Eliminación", key=f"detail_confirm_yes_{task.id}"):
+                        try:
+                            task_service.delete_task(task.id)
+                            st.success(f"Tarea '{task.title}' eliminada exitosamente")
+                            # Clean up session state
+                            if detail_confirm_key in st.session_state:
+                                del st.session_state[detail_confirm_key]
+                            if hasattr(st.session_state, 'task_to_view'):
+                                del st.session_state.task_to_view
+                            st.experimental_rerun()
+                        except TaskNotFoundException:
+                            st.error("Tarea no encontrada")
+                else:
+                    if st.button("🗑️ Eliminar Tarea"):
+                        st.session_state[detail_confirm_key] = True
+                        st.experimental_rerun()
+            
+            with col3:
+                if st.button("Cerrar"):
+                    # Clean up any pending confirmations
+                    detail_confirm_key = f"detail_confirm_delete_{task.id}"
+                    if detail_confirm_key in st.session_state:
+                        del st.session_state[detail_confirm_key]
                     del st.session_state.task_to_view
                     st.experimental_rerun()
                 
