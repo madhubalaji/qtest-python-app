@@ -6,10 +6,12 @@ A simple task management application with both CLI and web interfaces.
 
 - Add, view, update the tasks
 - Mark tasks as complete
+- **Delete tasks with confirmation dialog** (New Feature)
 - Search for tasks by keyword
 - Filter tasks by status and priority
 - Command-line interface for quick task management
 - Web interface built with Streamlit for a user-friendly experience
+- **Hindi language support in UI** (Enhanced Feature)
 
 ## Project Structure
 
@@ -71,9 +73,21 @@ streamlit run src/app.py
 ```
 
 The web interface provides the following pages:
-- View Tasks: Display and manage all tasks
-- Add Task: Create new tasks
-- Search Tasks: Find tasks by keyword
+- **View Tasks (कार्य देखें)**: Display and manage all tasks with delete functionality
+- **Add Task (कार्य जोड़ें)**: Create new tasks
+- **Search Tasks (कार्य खोजें)**: Find tasks by keyword with delete options
+
+### New Delete Functionality
+
+The web interface now includes comprehensive delete functionality:
+
+1. **Delete Button**: Each task displays a delete button (🗑️) in the task list
+2. **Confirmation Dialog**: Two-step confirmation process prevents accidental deletions
+3. **Multiple Locations**: Delete functionality available in:
+   - Main task view page
+   - Search results
+   - Task detail view
+4. **Hindi Language Support**: All UI elements translated to Hindi for better accessibility
 
 
 
