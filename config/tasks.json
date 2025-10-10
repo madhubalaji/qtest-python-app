@@ -1,10 +1,26 @@
 [
   {
     "id": 1,
-    "title": "test",
-    "description": "test",
-    "priority": "medium",
+    "title": "テストタスク1",
+    "description": "削除機能のテスト用タスク",
+    "priority": "high",
     "completed": false,
     "created_at": "2025-04-11 10:29:17"
+  },
+  {
+    "id": 2,
+    "title": "完了済みタスク",
+    "description": "完了したタスクの削除テスト",
+    "priority": "medium",
+    "completed": true,
+    "created_at": "2025-04-11 09:15:30"
+  },
+  {
+    "id": 3,
+    "title": "低優先度タスク",
+    "description": "優先度が低いタスク",
+    "priority": "low",
+    "completed": false,
+    "created_at": "2025-04-11 08:45:22"
   }
 ]

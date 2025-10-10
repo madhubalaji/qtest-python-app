@@ -14,6 +14,75 @@ from src.services.task_service import TaskService
 from src.utils.exceptions import TaskNotFoundException
 
 
+def _print_task_table_header():
+    """Print the header for task table."""
+    print("\n" + "=" * 60)
+    print(f"{'ID':^5}|{'Title':^20}|{'Priority':^10}|{'Status':^10}|{'Created At':^20}")
+    print("=" * 60)
+
+
+def _print_task_row(task, include_created_at=True):
+    """Print a single task row."""
+    status = "Completed" if task.completed else "Active"
+    if include_created_at:
+        print(f"{task.id:^5}|{task.title[:18]:^20}|{task.priority:^10}|{status:^10}|{task.created_at:^20}")
+    else:
+        print(f"{task.id:^5}|{task.title[:18]:^20}|{task.priority:^10}|{status:^10}")
+
+
+def _handle_add_command(args, task_service):
+    """Handle the add command."""
+    task = task_service.add_task(args.title, args.description, args.priority)
+    print(f"Task '{task.title}' added successfully with ID {task.id}.")
+
+
+def _handle_list_command(args, task_service):
+    """Handle the list command."""
+    tasks = task_service.get_all_tasks(show_completed=args.all)
+    if not tasks:
+        print("No tasks found.")
+        return
+
+    _print_task_table_header()
+
+    for task in tasks:
+        _print_task_row(task)
+
+    print("=" * 60 + "\n")
+
+
+def _handle_search_command(args, task_service):
+    """Handle the search command."""
+    results = task_service.search_tasks(args.keyword)
+
+    if not results:
+        print(f"No tasks found matching '{args.keyword}'.")
+        return
+
+    print(f"\nFound {len(results)} tasks matching '{args.keyword}':")
+    print("=" * 60)
+    print(f"{'ID':^5}|{'Title':^20}|{'Priority':^10}|{'Status':^10}")
+    print("=" * 60)
+
+    for task in results:
+        _print_task_row(task, include_created_at=False)
+
+    print("=" * 60 + "\n")
+
+
+def _handle_view_command(args, task_service):
+    """Handle the view command."""
+    task = task_service.get_task_by_id(args.id)
+    print("\n" + "=" * 60)
+    print(f"Task ID: {task.id}")
+    print(f"Title: {task.title}")
+    print(f"Description: {task.description}")
+    print(f"Priority: {task.priority}")
+    print(f"Status: {'Completed' if task.completed else 'Active'}")
+    print(f"Created at: {task.created_at}")
+    print("=" * 60 + "\n")
+
+
 def main():
     """Main function to handle command-line arguments."""
     parser = argparse.ArgumentParser(description="Task Manager - A CLI task management app")
@@ -24,17 +93,17 @@ def main():
     add_parser.add_argument("title", help="Task title")
     add_parser.add_argument("-d", "--description", help="Task description", default="")
     add_parser.add_argument(
-        "-p", "--priority", 
-        help="Task priority", 
-        choices=["low", "medium", "high"], 
+        "-p", "--priority",
+        help="Task priority",
+        choices=["low", "medium", "high"],
         default="medium"
     )
 
     # List tasks command
     list_parser = subparsers.add_parser("list", help="List all tasks")
     list_parser.add_argument(
-        "-a", "--all", 
-        help="Show completed tasks as well", 
+        "-a", "--all",
+        help="Show completed tasks as well",
         action="store_true"
     )
 
@@ -55,7 +124,7 @@ def main():
     view_parser.add_argument("id", type=int, help="Task ID to view")
 
     args = parser.parse_args()
-    
+
     # Initialize the task service
     config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config")
     os.makedirs(config_dir, exist_ok=True)
@@ -64,65 +133,28 @@ def main():
 
     try:
         if args.command == "add":
-            task = task_service.add_task(args.title, args.description, args.priority)
-            print(f"Task '{task.title}' added successfully with ID {task.id}.")
-            
+            _handle_add_command(args, task_service)
+
         elif args.command == "list":
-            tasks = task_service.get_all_tasks(show_completed=args.all)
-            if not tasks:
-                print("No tasks found.")
-                return
-                
-            print("\n" + "=" * 60)
-            print(f"{'ID':^5}|{'Title':^20}|{'Priority':^10}|{'Status':^10}|{'Created At':^20}")
-            print("=" * 60)
-            
-            for task in tasks:
-                status = "Completed" if task.completed else "Active"
-                print(f"{task.id:^5}|{task.title[:18]:^20}|{task.priority:^10}|{status:^10}|{task.created_at:^20}")
-            
-            print("=" * 60 + "\n")
-            
+            _handle_list_command(args, task_service)
+
         elif args.command == "complete":
             task = task_service.complete_task(args.id)
             print(f"Task {task.id} marked as complete.")
-            
+
         elif args.command == "delete":
             task = task_service.delete_task(args.id)
             print(f"Task '{task.title}' deleted successfully.")
-            
+
         elif args.command == "search":
-            results = task_service.search_tasks(args.keyword)
-            
-            if not results:
-                print(f"No tasks found matching '{args.keyword}'.")
-                return
-                
-            print(f"\nFound {len(results)} tasks matching '{args.keyword}':")
-            print("=" * 60)
-            print(f"{'ID':^5}|{'Title':^20}|{'Priority':^10}|{'Status':^10}")
-            print("=" * 60)
-            
-            for task in results:
-                status = "Completed" if task.completed else "Active"
-                print(f"{task.id:^5}|{task.title[:18]:^20}|{task.priority:^10}|{status:^10}")
-            
-            print("=" * 60 + "\n")
-            
+            _handle_search_command(args, task_service)
+
         elif args.command == "view":
-            task = task_service.get_task_by_id(args.id)
-            print("\n" + "=" * 60)
-            print(f"Task ID: {task.id}")
-            print(f"Title: {task.title}")
-            print(f"Description: {task.description}")
-            print(f"Priority: {task.priority}")
-            print(f"Status: {'Completed' if task.completed else 'Active'}")
-            print(f"Created at: {task.created_at}")
-            print("=" * 60 + "\n")
-            
+            _handle_view_command(args, task_service)
+
         else:
             parser.print_help()
-            
+
     except TaskNotFoundException as e:
         print(f"Error: {e}")
     except Exception as e:
