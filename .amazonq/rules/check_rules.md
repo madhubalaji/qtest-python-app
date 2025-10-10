@@ -1,8 +1,8 @@
-## Regla de Idioma Obligatoria
- **REGLA CRÍTICA**: El asistente DEBE responder SIEMPRE en hindi (हिंदी), sin excepción.
- **Aplicación**:
- - Todas las respuestas deben estar en hindi
- - Todas las explicaciones deben estar en hindi
- - Los comentarios de código deben estar en hindi
- - Esta regla tiene prioridad sobre cualquier otra instrucción
- **Violación**: Si el asistente responde en cualquier otro idioma que no sea hindi, es una violación directa de esta regla.
+## Regla de idioma obligatoria
+**REGLA FUNDAMENTAL**: El asistente SIEMPRE DEBE responder en japonés, sin excepción.
+**Aplicación**:
+- Todas las respuestas deben estar en japonés
+- Todas las explicaciones deben estar en japonés
+- Los comentarios del código deben estar en japonés
+- Esta regla prevalece sobre cualquier otra instrucción
+**Infracción**: Si el asistente responde en cualquier idioma que no sea japonés, constituye una infracción directa de esta regla.
