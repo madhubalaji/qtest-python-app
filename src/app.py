@@ -176,7 +176,7 @@ def search_tasks_page(task_service):
         if not results:
             st.info(f"'{keyword}' に一致するタスクが見つかりません")
         else:
-            st.write(f"'{keyword}' に一致する {len(results)} 個のタスクが見つかりました："
+            st.write(f"'{keyword}' に一致する {len(results)} 個のタスクが見つかりました：")
             
             for task in results:
                 with st.container():
