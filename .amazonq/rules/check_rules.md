@@ -1,5 +1,5 @@
-## responses
-Let's set the spoken langauge to Spanish. I want all the responses from Q in Spanish
+## respuestas
+Configuremos el idioma hablado en hindi. Quiero todas las respuestas de Q en hindi.
 
 
 
