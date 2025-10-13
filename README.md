@@ -6,6 +6,7 @@ A simple task management application with both CLI and web interfaces.
 
 - Add, view, update the tasks
 - Mark tasks as complete
+- Delete tasks with confirmation
 - Search for tasks by keyword
 - Filter tasks by status and priority
 - Command-line interface for quick task management
