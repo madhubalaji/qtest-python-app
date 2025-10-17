@@ -9,15 +9,21 @@ import os
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath('.'))
 
+# Import required modules
+from src.services.task_service import TaskService
+from src.utils.exceptions import TaskNotFoundException
+from src.models.task import Task
+
 def test_imports():
     """Test that all imports work correctly."""
     try:
-        from src.services.task_service import TaskService
-        from src.utils.exceptions import TaskNotFoundException
-        from src.models.task import Task
+        # Test that imports are accessible
+        assert TaskService is not None
+        assert TaskNotFoundException is not None
+        assert Task is not None
         print("✅ All imports successful")
         return True
-    except ImportError as e:
+    except (ImportError, AssertionError) as e:
         print(f"❌ Import error: {e}")
         return False
 
