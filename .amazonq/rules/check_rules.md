@@ -1,10 +1,8 @@
-
-Here's the text content from the image, which appears to be a coding style guide for comments:
-
 1. **Comment With Purpose**
 - Only include comments that add value to the code. Avoid redundant or self-explanatory comments.
 - ✓ Good: "# Using binary search for better performance on large datasets"
 - ✗ Bad: "# This adds two numbers" for 'a + b'
+
 
 2. **Avoid Noise**
 - Do not clutter the code with unnecessary comments. Comments should clarify, not distract. If the code is clear, no comment is needed.
