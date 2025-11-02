@@ -73,7 +73,7 @@ def display_tasks_page(task_service):
     # Display tasks
     for task in tasks:
         with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
             
             with col1:
                 if task.completed:
@@ -100,7 +100,38 @@ def display_tasks_page(task_service):
             with col3:
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                     task_service.complete_task(task.id)
-                    st.experimental_rerun()
+                    st.rerun()
+            
+            with col4:
+                # MBSOURCE: タスク削除ボタンを追加 - 確認ダイアログ付き
+                if st.button("🗑️", key=f"delete_{task.id}", help="Delete task"):
+                    # 削除確認のためのセッション状態を設定
+                    st.session_state[f"confirm_delete_{task.id}"] = True
+                    st.rerun()
+                
+                # 削除確認ダイアログ
+                if st.session_state.get(f"confirm_delete_{task.id}", False):
+                    st.warning(f"Are you sure you want to delete '{task.title}'?")
+                    col_yes, col_no = st.columns(2)
+                    
+                    with col_yes:
+                        if st.button("Yes, Delete", key=f"confirm_yes_{task.id}", type="primary"):
+                            try:
+                                task_service.delete_task(task.id)
+                                st.success(f"Task '{task.title}' deleted successfully!")
+                                # 確認状態をクリア
+                                if f"confirm_delete_{task.id}" in st.session_state:
+                                    del st.session_state[f"confirm_delete_{task.id}"]
+                                st.rerun()
+                            except TaskNotFoundException:
+                                st.error("Task not found!")
+                    
+                    with col_no:
+                        if st.button("Cancel", key=f"confirm_no_{task.id}"):
+                            # 確認状態をクリア
+                            if f"confirm_delete_{task.id}" in st.session_state:
+                                del st.session_state[f"confirm_delete_{task.id}"]
+                            st.rerun()
             
             st.divider()
 
@@ -148,7 +179,7 @@ def search_tasks_page(task_service):
             
             for task in results:
                 with st.container():
-                    col1, col2 = st.columns([4, 1])
+                    col1, col2, col3 = st.columns([4, 1, 1])
                     
                     with col1:
                         status = "Completed" if task.completed else "Active"
@@ -162,7 +193,35 @@ def search_tasks_page(task_service):
                     with col2:
                         if st.button("View", key=f"view_{task.id}"):
                             st.session_state.task_to_view = task.id
-                            st.experimental_rerun()
+                            st.rerun()
+                    
+                    with col3:
+                        # MBSOURCE: 検索結果からもタスクを削除できるように削除ボタンを追加
+                        if st.button("🗑️", key=f"search_delete_{task.id}", help="Delete task"):
+                            st.session_state[f"search_confirm_delete_{task.id}"] = True
+                            st.rerun()
+                        
+                        # 削除確認ダイアログ
+                        if st.session_state.get(f"search_confirm_delete_{task.id}", False):
+                            st.warning(f"Delete '{task.title}'?")
+                            col_yes, col_no = st.columns(2)
+                            
+                            with col_yes:
+                                if st.button("Yes", key=f"search_confirm_yes_{task.id}", type="primary"):
+                                    try:
+                                        task_service.delete_task(task.id)
+                                        st.success(f"Task '{task.title}' deleted!")
+                                        if f"search_confirm_delete_{task.id}" in st.session_state:
+                                            del st.session_state[f"search_confirm_delete_{task.id}"]
+                                        st.rerun()
+                                    except TaskNotFoundException:
+                                        st.error("Task not found!")
+                            
+                            with col_no:
+                                if st.button("No", key=f"search_confirm_no_{task.id}"):
+                                    if f"search_confirm_delete_{task.id}" in st.session_state:
+                                        del st.session_state[f"search_confirm_delete_{task.id}"]
+                                    st.rerun()
                     
                     st.divider()
     
@@ -178,17 +237,48 @@ def search_tasks_page(task_service):
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
             
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 if not task.completed and st.button("Mark as Complete"):
                     task_service.complete_task(task.id)
-                    st.experimental_rerun()
+                    st.rerun()
             
             with col2:
+                # MBSOURCE: タスク詳細ビューに削除ボタンを追加
+                if st.button("Delete Task", key=f"detail_delete_{task.id}", type="secondary"):
+                    st.session_state[f"detail_confirm_delete_{task.id}"] = True
+                    st.rerun()
+            
+            with col3:
                 if st.button("Close"):
                     del st.session_state.task_to_view
-                    st.experimental_rerun()
+                    st.rerun()
+            
+            # 削除確認ダイアログ（詳細ビュー用）
+            if st.session_state.get(f"detail_confirm_delete_{task.id}", False):
+                st.error(f"⚠️ Are you sure you want to permanently delete '{task.title}'?")
+                col_confirm_yes, col_confirm_no = st.columns(2)
+                
+                with col_confirm_yes:
+                    if st.button("Yes, Delete Permanently", key=f"detail_confirm_yes_{task.id}", type="primary"):
+                        try:
+                            task_service.delete_task(task.id)
+                            st.success(f"Task '{task.title}' has been deleted!")
+                            # セッション状態をクリア
+                            if f"detail_confirm_delete_{task.id}" in st.session_state:
+                                del st.session_state[f"detail_confirm_delete_{task.id}"]
+                            if hasattr(st.session_state, 'task_to_view'):
+                                del st.session_state.task_to_view
+                            st.rerun()
+                        except TaskNotFoundException:
+                            st.error("Task not found!")
+                
+                with col_confirm_no:
+                    if st.button("Cancel", key=f"detail_confirm_no_{task.id}"):
+                        if f"detail_confirm_delete_{task.id}" in st.session_state:
+                            del st.session_state[f"detail_confirm_delete_{task.id}"]
+                        st.rerun()
                 
         except TaskNotFoundException:
             st.error("Task not found")
