@@ -76,3 +76,19 @@ class Task:
         """String representation of the task."""
         status = "Completed" if self.completed else "Active"
         return f"Task {self.id}: {self.title} ({status}, {self.priority} priority)"
+
+    def __eq__(self, other) -> bool:
+        """Check equality with another task."""
+        if not isinstance(other, Task):
+            return False
+        return (
+            self.id == other.id and
+            self.title == other.title and
+            self.description == other.description and
+            self.priority == other.priority and
+            self.completed == other.completed
+        )
+
+    def __hash__(self) -> int:
+        """Hash function for the task."""
+        return hash((self.id, self.title, self.description, self.priority, self.completed))
