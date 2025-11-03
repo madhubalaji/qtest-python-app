@@ -70,7 +70,7 @@ class Task:
         # SUPPORT POUR LES ANCIENNES DONNÉES AVEC "PRIORITY" ET NOUVELLES AVEC "SEVERITY"
         severity = data.get("severity")
         priority = data.get("priority")
-        
+
         return cls(
             task_id=data["id"],
             title=data["title"],

@@ -4,7 +4,7 @@ Task service for managing task operations.
 
 import os
 import json
-from typing import List, Dict, Any, Optional
+from typing import List
 
 from src.models.task import Task
 from src.services.history_service import HistoryService
@@ -23,7 +23,7 @@ class TaskService:
         """
         self.storage_file = storage_file
         self.tasks = self._load_tasks()
-        
+
         # INITIALISATION DU SERVICE D'HISTORIQUE AVEC FICHIER SÉPARÉ
         history_dir = os.path.dirname(storage_file) if os.path.dirname(storage_file) else "."
         history_file = os.path.join(history_dir, "task_history.json")
@@ -43,7 +43,8 @@ class TaskService:
                     task_dicts = json.load(f)
                     tasks = [Task.from_dict(task_dict) for task_dict in task_dicts]
             except json.JSONDecodeError:
-                print(f"Error reading task file. Starting with empty task list.")
+                # GESTION D'ERREUR POUR FICHIER CORROMPU
+                print("Error reading task file. Starting with empty task list.")
         return tasks
 
     def _save_tasks(self) -> None:
@@ -68,14 +69,14 @@ class TaskService:
         task = Task(task_id, title, description, severity)
         self.tasks.append(task)
         self._save_tasks()
-        
+
         # ENREGISTREMENT DE L'HISTORIQUE POUR LA CRÉATION DE TÂCHE
         self.history_service.add_history_entry(
             task_id=task.id,
             action_type="create",
             new_values=task.to_dict()
         )
-        
+
         return task
 
     def get_all_tasks(self, show_completed: bool = True) -> List[Task]:
@@ -125,10 +126,10 @@ class TaskService:
             TaskNotFoundException: If no task with the given ID exists
         """
         task = self.get_task_by_id(task_id)
-        
+
         # SAUVEGARDE DES ANCIENNES VALEURS POUR L'HISTORIQUE
         old_values = task.to_dict()
-        
+
         if "title" in kwargs:
             task.title = kwargs["title"]
         if "description" in kwargs:
@@ -140,9 +141,9 @@ class TaskService:
             task.severity = kwargs["priority"]
         if "completed" in kwargs:
             task.completed = kwargs["completed"]
-            
+
         self._save_tasks()
-        
+
         # ENREGISTREMENT DE L'HISTORIQUE POUR LA MISE À JOUR
         new_values = task.to_dict()
         self.history_service.add_history_entry(
@@ -151,7 +152,7 @@ class TaskService:
             old_values=old_values,
             new_values=new_values
         )
-        
+
         return task
 
     def complete_task(self, task_id: int) -> Task:
@@ -168,13 +169,13 @@ class TaskService:
             TaskNotFoundException: If no task with the given ID exists
         """
         task = self.get_task_by_id(task_id)
-        
+
         # SAUVEGARDE DES ANCIENNES VALEURS POUR L'HISTORIQUE
         old_values = task.to_dict()
-        
+
         task.completed = True
         self._save_tasks()
-        
+
         # ENREGISTREMENT DE L'HISTORIQUE POUR LA COMPLÉTION
         new_values = task.to_dict()
         self.history_service.add_history_entry(
@@ -183,7 +184,7 @@ class TaskService:
             old_values=old_values,
             new_values=new_values
         )
-        
+
         return task
 
     def delete_task(self, task_id: int) -> Task:
@@ -200,6 +201,14 @@ class TaskService:
             TaskNotFoundException: If no task with the given ID exists
         """
         task = self.get_task_by_id(task_id)
+
+        # ENREGISTREMENT DE L'HISTORIQUE AVANT SUPPRESSION
+        self.history_service.add_history_entry(
+            task_id=task.id,
+            action_type="delete",
+            old_values=task.to_dict()
+        )
+
         self.tasks.remove(task)
         self._save_tasks()
         return task

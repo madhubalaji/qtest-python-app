@@ -36,7 +36,8 @@ class HistoryService:
                     history_dicts = json.load(f)
                     history_entries = [TaskHistory.from_dict(entry) for entry in history_dicts]
             except json.JSONDecodeError:
-                print(f"Error reading history file. Starting with empty history.")
+                # GESTION D'ERREUR POUR FICHIER CORROMPU
+                print("Error reading history file. Starting with empty history.")
         return history_entries
 
     def _save_history(self) -> None:
@@ -67,11 +68,11 @@ class HistoryService:
             The newly created TaskHistory entry
         """
         history_id = max([entry.id for entry in self.history_entries], default=0) + 1
-        
+
         # GÉNÉRATION AUTOMATIQUE DE DESCRIPTION SI NON FOURNIE
         if not description:
             description = self._generate_description(action_type, old_values, new_values)
-        
+
         history_entry = TaskHistory(
             history_id=history_id,
             task_id=task_id,
@@ -80,7 +81,7 @@ class HistoryService:
             new_values=new_values,
             description=description
         )
-        
+
         self.history_entries.append(history_entry)
         self._save_history()
         return history_entry
@@ -149,7 +150,7 @@ class HistoryService:
             key=lambda x: x.timestamp,
             reverse=True
         )
-        
+
         if limit:
             return sorted_history[:limit]
         return sorted_history
@@ -179,8 +180,8 @@ class HistoryService:
         original_count = len(self.history_entries)
         self.history_entries = [entry for entry in self.history_entries if entry.task_id != task_id]
         removed_count = original_count - len(self.history_entries)
-        
+
         if removed_count > 0:
             self._save_history()
-        
+
         return removed_count
