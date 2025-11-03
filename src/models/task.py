@@ -14,9 +14,11 @@ class Task:
         task_id: int,
         title: str,
         description: str = "",
-        priority: str = "medium",
+        severity: str = "medium",
         completed: bool = False,
-        created_at: Optional[str] = None
+        created_at: Optional[str] = None,
+        # COMPATIBILITÉ AVEC LES ANCIENNES DONNÉES UTILISANT "PRIORITY"
+        priority: Optional[str] = None
     ):
         """
         Initialize a new Task instance.
@@ -25,14 +27,16 @@ class Task:
             task_id: Unique identifier for the task
             title: Title of the task
             description: Detailed description of the task
-            priority: Priority level (low, medium, high)
+            severity: Severity level (low, medium, high)
             completed: Whether the task is completed
             created_at: Timestamp when the task was created
+            priority: Legacy parameter for backward compatibility
         """
         self.id = task_id
         self.title = title
         self.description = description
-        self.priority = priority
+        # MIGRATION AUTOMATIQUE DE "PRIORITY" VERS "SEVERITY" POUR COMPATIBILITÉ
+        self.severity = priority if priority is not None else severity
         self.completed = completed
         self.created_at = created_at or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -47,7 +51,7 @@ class Task:
             "id": self.id,
             "title": self.title,
             "description": self.description,
-            "priority": self.priority,
+            "severity": self.severity,
             "completed": self.completed,
             "created_at": self.created_at
         }
@@ -63,16 +67,21 @@ class Task:
         Returns:
             A new Task instance
         """
+        # SUPPORT POUR LES ANCIENNES DONNÉES AVEC "PRIORITY" ET NOUVELLES AVEC "SEVERITY"
+        severity = data.get("severity")
+        priority = data.get("priority")
+        
         return cls(
             task_id=data["id"],
             title=data["title"],
             description=data.get("description", ""),
-            priority=data.get("priority", "medium"),
+            severity=severity if severity is not None else "medium",
             completed=data.get("completed", False),
-            created_at=data.get("created_at")
+            created_at=data.get("created_at"),
+            priority=priority
         )
 
     def __str__(self) -> str:
         """String representation of the task."""
         status = "Completed" if self.completed else "Active"
-        return f"Task {self.id}: {self.title} ({status}, {self.priority} priority)"
+        return f"Task {self.id}: {self.title} ({status}, {self.severity} severity)"

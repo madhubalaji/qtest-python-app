@@ -51,8 +51,8 @@ def display_tasks_page(task_service):
     with col1:
         show_completed = st.checkbox("Show completed tasks", value=False)
     with col2:
-        filter_priority = st.selectbox(
-            "Filter by priority",
+        filter_severity = st.selectbox(
+            "Filter by severity",
             ["All", "Low", "Medium", "High"]
         )
     
@@ -63,8 +63,8 @@ def display_tasks_page(task_service):
     if not show_completed:
         tasks = [task for task in tasks if not task.completed]
     
-    if filter_priority != "All":
-        tasks = [task for task in tasks if task.priority.lower() == filter_priority.lower()]
+    if filter_severity != "All":
+        tasks = [task for task in tasks if task.severity.lower() == filter_severity.lower()]
     
     if not tasks:
         st.info("No tasks found matching your criteria.")
@@ -73,7 +73,7 @@ def display_tasks_page(task_service):
     # Display tasks
     for task in tasks:
         with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
             
             with col1:
                 if task.completed:
@@ -86,14 +86,14 @@ def display_tasks_page(task_service):
                     st.write(f"**Created at:** {task.created_at}")
             
             with col2:
-                priority_color = {
+                severity_color = {
                     "low": "blue",
                     "medium": "orange",
                     "high": "red"
-                }.get(task.priority.lower(), "gray")
+                }.get(task.severity.lower(), "gray")
                 
                 st.markdown(
-                    f"<span style='color:{priority_color};font-weight:bold;'>{task.priority.upper()}</span>",
+                    f"<span style='color:{severity_color};font-weight:bold;'>{task.severity.upper()}</span>",
                     unsafe_allow_html=True
                 )
             
@@ -101,6 +101,27 @@ def display_tasks_page(task_service):
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                     task_service.complete_task(task.id)
                     st.experimental_rerun()
+            
+            with col4:
+                # BOUTON DE SUPPRESSION AVEC CONFIRMATION
+                if st.button("🗑️", key=f"delete_{task.id}", help="Delete task"):
+                    st.session_state[f"confirm_delete_{task.id}"] = True
+                    st.experimental_rerun()
+                
+                # DIALOGUE DE CONFIRMATION POUR LA SUPPRESSION
+                if st.session_state.get(f"confirm_delete_{task.id}", False):
+                    st.warning(f"Delete '{task.title}'?")
+                    col_yes, col_no = st.columns(2)
+                    with col_yes:
+                        if st.button("Yes", key=f"confirm_yes_{task.id}"):
+                            task_service.delete_task(task.id)
+                            st.session_state[f"confirm_delete_{task.id}"] = False
+                            st.success(f"Task '{task.title}' deleted successfully!")
+                            st.experimental_rerun()
+                    with col_no:
+                        if st.button("No", key=f"confirm_no_{task.id}"):
+                            st.session_state[f"confirm_delete_{task.id}"] = False
+                            st.experimental_rerun()
             
             st.divider()
 
@@ -112,8 +133,8 @@ def add_task_page(task_service):
     with st.form("add_task_form"):
         title = st.text_input("Title", max_chars=50)
         description = st.text_area("Description", max_chars=200)
-        priority = st.select_slider(
-            "Priority",
+        severity = st.select_slider(
+            "Severity",
             options=["Low", "Medium", "High"],
             value="Medium"
         )
@@ -127,7 +148,7 @@ def add_task_page(task_service):
                 task = task_service.add_task(
                     title=title,
                     description=description,
-                    priority=priority.lower()
+                    severity=severity.lower()
                 )
                 st.success(f"Task '{title}' added successfully with ID {task.id}")
 
@@ -148,12 +169,12 @@ def search_tasks_page(task_service):
             
             for task in results:
                 with st.container():
-                    col1, col2 = st.columns([4, 1])
+                    col1, col2, col3 = st.columns([3, 1, 1])
                     
                     with col1:
                         status = "Completed" if task.completed else "Active"
                         st.markdown(f"**{task.title}** ({status})")
-                        st.write(f"Priority: {task.priority}")
+                        st.write(f"Severity: {task.severity}")
                         
                         with st.expander("Details"):
                             st.write(f"**Description:** {task.description}")
@@ -163,6 +184,24 @@ def search_tasks_page(task_service):
                         if st.button("View", key=f"view_{task.id}"):
                             st.session_state.task_to_view = task.id
                             st.experimental_rerun()
+                    
+                    with col3:
+                        # BOUTON DE SUPPRESSION DANS LA RECHERCHE
+                        if st.button("🗑️", key=f"search_delete_{task.id}", help="Delete task"):
+                            st.session_state[f"search_confirm_delete_{task.id}"] = True
+                            st.experimental_rerun()
+                        
+                        # DIALOGUE DE CONFIRMATION POUR LA SUPPRESSION DANS LA RECHERCHE
+                        if st.session_state.get(f"search_confirm_delete_{task.id}", False):
+                            st.warning("Delete?")
+                            if st.button("Yes", key=f"search_confirm_yes_{task.id}"):
+                                task_service.delete_task(task.id)
+                                st.session_state[f"search_confirm_delete_{task.id}"] = False
+                                st.success("Task deleted!")
+                                st.experimental_rerun()
+                            if st.button("No", key=f"search_confirm_no_{task.id}"):
+                                st.session_state[f"search_confirm_delete_{task.id}"] = False
+                                st.experimental_rerun()
                     
                     st.divider()
     
@@ -174,11 +213,11 @@ def search_tasks_page(task_service):
             st.subheader(f"Task Details: {task.title}")
             st.write(f"**ID:** {task.id}")
             st.write(f"**Description:** {task.description}")
-            st.write(f"**Priority:** {task.priority}")
+            st.write(f"**Severity:** {task.severity}")
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
             
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 if not task.completed and st.button("Mark as Complete"):
@@ -186,9 +225,31 @@ def search_tasks_page(task_service):
                     st.experimental_rerun()
             
             with col2:
+                # BOUTON DE SUPPRESSION DANS LA VUE DÉTAILLÉE
+                if st.button("Delete Task"):
+                    st.session_state[f"detail_confirm_delete_{task.id}"] = True
+                    st.experimental_rerun()
+            
+            with col3:
                 if st.button("Close"):
                     del st.session_state.task_to_view
                     st.experimental_rerun()
+            
+            # DIALOGUE DE CONFIRMATION POUR LA SUPPRESSION DANS LA VUE DÉTAILLÉE
+            if st.session_state.get(f"detail_confirm_delete_{task.id}", False):
+                st.warning(f"Are you sure you want to delete '{task.title}'?")
+                col_confirm, col_cancel = st.columns(2)
+                with col_confirm:
+                    if st.button("Confirm Delete", key=f"detail_confirm_yes_{task.id}"):
+                        task_service.delete_task(task.id)
+                        st.session_state[f"detail_confirm_delete_{task.id}"] = False
+                        del st.session_state.task_to_view
+                        st.success("Task deleted successfully!")
+                        st.experimental_rerun()
+                with col_cancel:
+                    if st.button("Cancel", key=f"detail_confirm_no_{task.id}"):
+                        st.session_state[f"detail_confirm_delete_{task.id}"] = False
+                        st.experimental_rerun()
                 
         except TaskNotFoundException:
             st.error("Task not found")

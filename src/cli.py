@@ -24,8 +24,8 @@ def main():
     add_parser.add_argument("title", help="Task title")
     add_parser.add_argument("-d", "--description", help="Task description", default="")
     add_parser.add_argument(
-        "-p", "--priority", 
-        help="Task priority", 
+        "-s", "--severity", 
+        help="Task severity", 
         choices=["low", "medium", "high"], 
         default="medium"
     )
@@ -64,7 +64,7 @@ def main():
 
     try:
         if args.command == "add":
-            task = task_service.add_task(args.title, args.description, args.priority)
+            task = task_service.add_task(args.title, args.description, args.severity)
             print(f"Task '{task.title}' added successfully with ID {task.id}.")
             
         elif args.command == "list":
@@ -74,12 +74,12 @@ def main():
                 return
                 
             print("\n" + "=" * 60)
-            print(f"{'ID':^5}|{'Title':^20}|{'Priority':^10}|{'Status':^10}|{'Created At':^20}")
+            print(f"{'ID':^5}|{'Title':^20}|{'Severity':^10}|{'Status':^10}|{'Created At':^20}")
             print("=" * 60)
             
             for task in tasks:
                 status = "Completed" if task.completed else "Active"
-                print(f"{task.id:^5}|{task.title[:18]:^20}|{task.priority:^10}|{status:^10}|{task.created_at:^20}")
+                print(f"{task.id:^5}|{task.title[:18]:^20}|{task.severity:^10}|{status:^10}|{task.created_at:^20}")
             
             print("=" * 60 + "\n")
             
@@ -100,12 +100,12 @@ def main():
                 
             print(f"\nFound {len(results)} tasks matching '{args.keyword}':")
             print("=" * 60)
-            print(f"{'ID':^5}|{'Title':^20}|{'Priority':^10}|{'Status':^10}")
+            print(f"{'ID':^5}|{'Title':^20}|{'Severity':^10}|{'Status':^10}")
             print("=" * 60)
             
             for task in results:
                 status = "Completed" if task.completed else "Active"
-                print(f"{task.id:^5}|{task.title[:18]:^20}|{task.priority:^10}|{status:^10}")
+                print(f"{task.id:^5}|{task.title[:18]:^20}|{task.severity:^10}|{status:^10}")
             
             print("=" * 60 + "\n")
             
@@ -115,7 +115,7 @@ def main():
             print(f"Task ID: {task.id}")
             print(f"Title: {task.title}")
             print(f"Description: {task.description}")
-            print(f"Priority: {task.priority}")
+            print(f"Severity: {task.severity}")
             print(f"Status: {'Completed' if task.completed else 'Active'}")
             print(f"Created at: {task.created_at}")
             print("=" * 60 + "\n")
