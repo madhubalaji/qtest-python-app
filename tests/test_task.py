@@ -32,7 +32,7 @@ def test_task_to_dict():
     """Test task serialization to dictionary."""
     task = Task(1, "Test Task", "Test Description", "low")
     task_dict = task.to_dict()
-    
+
     assert task_dict["id"] == 1
     assert task_dict["title"] == "Test Task"
     assert task_dict["severity"] == "low"
@@ -49,7 +49,7 @@ def test_task_from_dict():
         "severity": "high",
         "completed": False
     }
-    
+
     task = Task.from_dict(task_data)
     assert task.id == 1
     assert task.title == "Test Task"
@@ -65,7 +65,7 @@ def test_task_from_dict_with_priority():
         "priority": "medium",
         "completed": False
     }
-    
+
     task = Task.from_dict(task_data)
     assert task.id == 1
     assert task.severity == "medium"  # MIGRATION AUTOMATIQUE DE PRIORITY VERS SEVERITY

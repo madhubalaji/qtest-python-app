@@ -4,11 +4,11 @@ Streamlit web application for the task manager.
 
 import os
 import sys
-import streamlit as st
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import streamlit as st
 from src.services.task_service import TaskService
 from src.utils.exceptions import TaskNotFoundException
 
@@ -33,7 +33,6 @@ def main():
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["View Tasks", "Add Task", "Search Tasks"])
-
     if page == "View Tasks":
         display_tasks_page(task_service)
     elif page == "Add Task":
@@ -166,123 +165,64 @@ def add_task_page(task_service):
 def search_tasks_page(task_service):
     """Display the search tasks page."""
     st.header("Search Tasks")
-
+    
     keyword = st.text_input("Search for tasks", placeholder="Enter keyword...")
-
+    
     if keyword:
         results = task_service.search_tasks(keyword)
-
+        
         if not results:
             st.info(f"No tasks found matching '{keyword}'")
         else:
             st.write(f"Found {len(results)} tasks matching '{keyword}':")
-            _display_search_results(results, task_service)
-
+            
+            for task in results:
+                with st.container():
+                    col1, col2 = st.columns([4, 1])
+                    
+                    with col1:
+                        status = "Completed" if task.completed else "Active"
+                        st.markdown(f"**{task.title}** ({status})")
+                        st.write(f"Priority: {task.priority}")
+                        
+                        with st.expander("Details"):
+                            st.write(f"**Description:** {task.description}")
+                            st.write(f"**Created at:** {task.created_at}")
+                    
+                    with col2:
+                        if st.button("View", key=f"view_{task.id}"):
+                            st.session_state.task_to_view = task.id
+                            st.experimental_rerun()
+                    
+                    st.divider()
+    
     # View task details if selected
-    _display_task_details(task_service)
-
-
-def _display_search_results(results, task_service):
-    """Helper function to display search results."""
-    for task in results:
-        with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
-
-            with col1:
-                status = "Completed" if task.completed else "Active"
-                st.markdown(f"**{task.title}** ({status})")
-                st.write(f"Severity: {task.severity}")
-
-                with st.expander("Details"):
-                    st.write(f"**Description:** {task.description}")
-                    st.write(f"**Created at:** {task.created_at}")
-
-            with col2:
-                if st.button("View", key=f"view_{task.id}"):
-                    st.session_state.task_to_view = task.id
-                    st.experimental_rerun()
-
-            with col3:
-                _handle_search_task_deletion(task, task_service)
-
-            st.divider()
-
-
-def _handle_search_task_deletion(task, task_service):
-    """Helper function to handle task deletion in search results."""
-    # BOUTON DE SUPPRESSION DANS LA RECHERCHE
-    if st.button("🗑️", key=f"search_delete_{task.id}", help="Delete task"):
-        st.session_state[f"search_confirm_delete_{task.id}"] = True
-        st.experimental_rerun()
-
-    # DIALOGUE DE CONFIRMATION POUR LA SUPPRESSION DANS LA RECHERCHE
-    if st.session_state.get(f"search_confirm_delete_{task.id}", False):
-        st.warning("Delete?")
-        if st.button("Yes", key=f"search_confirm_yes_{task.id}"):
-            task_service.delete_task(task.id)
-            st.session_state[f"search_confirm_delete_{task.id}"] = False
-            st.success("Task deleted!")
-            st.experimental_rerun()
-        if st.button("No", key=f"search_confirm_no_{task.id}"):
-            st.session_state[f"search_confirm_delete_{task.id}"] = False
-            st.experimental_rerun()
-
-
-def _display_task_details(task_service):
-    """Helper function to display task details."""
     if hasattr(st.session_state, 'task_to_view'):
         try:
             task = task_service.get_task_by_id(st.session_state.task_to_view)
-
+            
             st.subheader(f"Task Details: {task.title}")
             st.write(f"**ID:** {task.id}")
             st.write(f"**Description:** {task.description}")
-            st.write(f"**Severity:** {task.severity}")
+            st.write(f"**Priority:** {task.priority}")
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
-
-            col1, col2, col3 = st.columns(3)
-
+            
+            col1, col2 = st.columns(2)
+            
             with col1:
                 if not task.completed and st.button("Mark as Complete"):
                     task_service.complete_task(task.id)
                     st.experimental_rerun()
-
+            
             with col2:
-                _handle_detail_task_deletion(task, task_service)
-
-            with col3:
                 if st.button("Close"):
                     del st.session_state.task_to_view
                     st.experimental_rerun()
-
+                
         except TaskNotFoundException:
             st.error("Task not found")
             del st.session_state.task_to_view
-
-
-def _handle_detail_task_deletion(task, task_service):
-    """Helper function to handle task deletion in detail view."""
-    # BOUTON DE SUPPRESSION DANS LA VUE DÉTAILLÉE
-    if st.button("Delete Task"):
-        st.session_state[f"detail_confirm_delete_{task.id}"] = True
-        st.experimental_rerun()
-
-    # DIALOGUE DE CONFIRMATION POUR LA SUPPRESSION DANS LA VUE DÉTAILLÉE
-    if st.session_state.get(f"detail_confirm_delete_{task.id}", False):
-        st.warning(f"Are you sure you want to delete '{task.title}'?")
-        col_confirm, col_cancel = st.columns(2)
-        with col_confirm:
-            if st.button("Confirm Delete", key=f"detail_confirm_yes_{task.id}"):
-                task_service.delete_task(task.id)
-                st.session_state[f"detail_confirm_delete_{task.id}"] = False
-                del st.session_state.task_to_view
-                st.success("Task deleted successfully!")
-                st.experimental_rerun()
-        with col_cancel:
-            if st.button("Cancel", key=f"detail_confirm_no_{task.id}"):
-                st.session_state[f"detail_confirm_delete_{task.id}"] = False
-                st.experimental_rerun()
 
 
 if __name__ == "__main__":
