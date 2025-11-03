@@ -4,11 +4,11 @@ Streamlit web application for the task manager.
 
 import os
 import sys
-import streamlit as st
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import streamlit as st
 from src.services.task_service import TaskService
 from src.utils.exceptions import TaskNotFoundException
 
@@ -20,20 +20,19 @@ def main():
         page_icon="✅",
         layout="wide"
     )
-    
+
     st.title("Task Manager")
     st.write("Manage your tasks efficiently")
-    
+
     # Initialize the task service
     config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config")
     os.makedirs(config_dir, exist_ok=True)
     storage_file = os.path.join(config_dir, "tasks.json")
     task_service = TaskService(storage_file)
-    
+
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["View Tasks", "Add Task", "Search Tasks"])
-    
     if page == "View Tasks":
         display_tasks_page(task_service)
     elif page == "Add Task":
@@ -45,81 +44,112 @@ def main():
 def display_tasks_page(task_service):
     """Display the tasks page."""
     st.header("Your Tasks")
-    
+
     # Filter options
     col1, col2 = st.columns(2)
     with col1:
         show_completed = st.checkbox("Show completed tasks", value=False)
     with col2:
-        filter_priority = st.selectbox(
-            "Filter by priority",
+        filter_severity = st.selectbox(
+            "Filter by severity",
             ["All", "Low", "Medium", "High"]
         )
-    
+
     # Get tasks
     tasks = task_service.get_all_tasks(show_completed=True)
-    
+
     # Apply filters
     if not show_completed:
         tasks = [task for task in tasks if not task.completed]
-    
-    if filter_priority != "All":
-        tasks = [task for task in tasks if task.priority.lower() == filter_priority.lower()]
-    
+
+    if filter_severity != "All":
+        tasks = [task for task in tasks if task.severity.lower() == filter_severity.lower()]
+
     if not tasks:
         st.info("No tasks found matching your criteria.")
         return
-    
+
     # Display tasks
+    _display_task_list(tasks, task_service)
+
+
+def _display_task_list(tasks, task_service):
+    """Helper function to display the list of tasks."""
     for task in tasks:
         with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
-            
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+
             with col1:
                 if task.completed:
                     st.markdown(f"~~**{task.title}**~~")
                 else:
                     st.markdown(f"**{task.title}**")
-                
+
                 with st.expander("Details"):
                     st.write(f"**Description:** {task.description}")
                     st.write(f"**Created at:** {task.created_at}")
-            
+
             with col2:
-                priority_color = {
+                severity_color = {
                     "low": "blue",
                     "medium": "orange",
                     "high": "red"
-                }.get(task.priority.lower(), "gray")
-                
+                }.get(task.severity.lower(), "gray")
+
                 st.markdown(
-                    f"<span style='color:{priority_color};font-weight:bold;'>{task.priority.upper()}</span>",
+                    f"<span style='color:{severity_color};font-weight:bold;'>{task.severity.upper()}</span>",
                     unsafe_allow_html=True
                 )
-            
+
             with col3:
                 if not task.completed and st.button("✓", key=f"complete_{task.id}"):
                     task_service.complete_task(task.id)
                     st.experimental_rerun()
-            
+
+            with col4:
+                _handle_task_deletion(task, task_service)
+
             st.divider()
+
+
+def _handle_task_deletion(task, task_service):
+    """Helper function to handle task deletion with confirmation."""
+    # BOUTON DE SUPPRESSION AVEC CONFIRMATION
+    if st.button("🗑️", key=f"delete_{task.id}", help="Delete task"):
+        st.session_state[f"confirm_delete_{task.id}"] = True
+        st.experimental_rerun()
+
+    # DIALOGUE DE CONFIRMATION POUR LA SUPPRESSION
+    if st.session_state.get(f"confirm_delete_{task.id}", False):
+        st.warning(f"Delete '{task.title}'?")
+        col_yes, col_no = st.columns(2)
+        with col_yes:
+            if st.button("Yes", key=f"confirm_yes_{task.id}"):
+                task_service.delete_task(task.id)
+                st.session_state[f"confirm_delete_{task.id}"] = False
+                st.success(f"Task '{task.title}' deleted successfully!")
+                st.experimental_rerun()
+        with col_no:
+            if st.button("No", key=f"confirm_no_{task.id}"):
+                st.session_state[f"confirm_delete_{task.id}"] = False
+                st.experimental_rerun()
 
 
 def add_task_page(task_service):
     """Display the add task page."""
     st.header("Add New Task")
-    
+
     with st.form("add_task_form"):
         title = st.text_input("Title", max_chars=50)
         description = st.text_area("Description", max_chars=200)
-        priority = st.select_slider(
-            "Priority",
+        severity = st.select_slider(
+            "Severity",
             options=["Low", "Medium", "High"],
             value="Medium"
         )
-        
+
         submitted = st.form_submit_button("Add Task")
-        
+
         if submitted:
             if not title:
                 st.error("Title is required")
@@ -127,7 +157,7 @@ def add_task_page(task_service):
                 task = task_service.add_task(
                     title=title,
                     description=description,
-                    priority=priority.lower()
+                    severity=severity.lower()
                 )
                 st.success(f"Task '{title}' added successfully with ID {task.id}")
 
