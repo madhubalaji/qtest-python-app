@@ -225,7 +225,7 @@ def search_tasks_page(task_service):
             
             with col2:
                 # BOUTON DE SUPPRESSION DANS LA VUE DÉTAILLÉE
-                if st.button("🗑️ Delete Task", key=f"delete_detail_{task.id}"):
+                if st.button("🗑️", key=f"delete_detail_{task.id}"):
                     st.session_state[f"confirm_delete_detail_{task.id}"] = True
                     st.experimental_rerun()
             
