@@ -98,11 +98,49 @@ def display_tasks_page(task_service):
                 )
             
             with col3:
-                if not task.completed and st.button("✓", key=f"complete_{task.id}"):
-                    task_service.complete_task(task.id)
-                    st.experimental_rerun()
+                # BOUTONS D'ACTION POUR CHAQUE TÂCHE
+                action_col1, action_col2 = st.columns(2)
+                
+                with action_col1:
+                    if not task.completed and st.button("✓", key=f"complete_{task.id}"):
+                        task_service.complete_task(task.id)
+                        st.experimental_rerun()
+                
+                with action_col2:
+                    # BOUTON DE SUPPRESSION AVEC ICÔNE POUBELLE
+                    if st.button("🗑️", key=f"delete_{task.id}", help="Delete task"):
+                        st.session_state[f"confirm_delete_{task.id}"] = True
+                        st.experimental_rerun()
             
             st.divider()
+    
+    # GESTION DES CONFIRMATIONS DE SUPPRESSION
+    # PARCOURIR TOUTES LES TÂCHES POUR VÉRIFIER LES DEMANDES DE SUPPRESSION
+    for task in tasks:
+        if st.session_state.get(f"confirm_delete_{task.id}", False):
+            st.warning(f"⚠️ Are you sure you want to delete the task: **{task.title}**?")
+            
+            col1, col2, col3 = st.columns([1, 1, 2])
+            
+            with col1:
+                if st.button("Yes, Delete", key=f"confirm_yes_{task.id}", type="primary"):
+                    try:
+                        task_service.delete_task(task.id)
+                        st.success(f"Task '{task.title}' deleted successfully!")
+                        # NETTOYER L'ÉTAT DE SESSION APRÈS SUPPRESSION
+                        del st.session_state[f"confirm_delete_{task.id}"]
+                        st.experimental_rerun()
+                    except Exception as e:
+                        st.error(f"Error deleting task: {str(e)}")
+            
+            with col2:
+                if st.button("Cancel", key=f"confirm_no_{task.id}"):
+                    # ANNULER LA SUPPRESSION ET NETTOYER L'ÉTAT
+                    del st.session_state[f"confirm_delete_{task.id}"]
+                    st.experimental_rerun()
+            
+            # ARRÊTER APRÈS LA PREMIÈRE CONFIRMATION TROUVÉE POUR ÉVITER LES CONFLITS
+            break
 
 
 def add_task_page(task_service):
@@ -178,7 +216,7 @@ def search_tasks_page(task_service):
             st.write(f"**Status:** {'Completed' if task.completed else 'Active'}")
             st.write(f"**Created at:** {task.created_at}")
             
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 if not task.completed and st.button("Mark as Complete"):
@@ -186,9 +224,41 @@ def search_tasks_page(task_service):
                     st.experimental_rerun()
             
             with col2:
+                # BOUTON DE SUPPRESSION DANS LA VUE DÉTAILLÉE
+                if st.button("🗑️", key=f"delete_detail_{task.id}"):
+                    st.session_state[f"confirm_delete_detail_{task.id}"] = True
+                    st.experimental_rerun()
+            
+            with col3:
                 if st.button("Close"):
                     del st.session_state.task_to_view
                     st.experimental_rerun()
+            
+            # GESTION DE LA CONFIRMATION DE SUPPRESSION DANS LA VUE DÉTAILLÉE
+            if st.session_state.get(f"confirm_delete_detail_{task.id}", False):
+                st.warning(f"⚠️ Are you sure you want to delete the task: **{task.title}**?")
+                
+                confirm_col1, confirm_col2, confirm_col3 = st.columns([1, 1, 2])
+                
+                with confirm_col1:
+                    if st.button("Yes, Delete", key=f"confirm_detail_yes_{task.id}", type="primary"):
+                        try:
+                            task_service.delete_task(task.id)
+                            st.success(f"Task '{task.title}' deleted successfully!")
+                            # NETTOYER L'ÉTAT APRÈS SUPPRESSION ET FERMER LA VUE DÉTAILLÉE
+                            if f"confirm_delete_detail_{task.id}" in st.session_state:
+                                del st.session_state[f"confirm_delete_detail_{task.id}"]
+                            if hasattr(st.session_state, 'task_to_view'):
+                                del st.session_state.task_to_view
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.error(f"Error deleting task: {str(e)}")
+                
+                with confirm_col2:
+                    if st.button("Cancel", key=f"confirm_detail_no_{task.id}"):
+                        # ANNULER LA SUPPRESSION
+                        del st.session_state[f"confirm_delete_detail_{task.id}"]
+                        st.experimental_rerun()
                 
         except TaskNotFoundException:
             st.error("Task not found")
