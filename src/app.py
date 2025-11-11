@@ -16,7 +16,7 @@ from src.utils.exceptions import TaskNotFoundException
 def main():
     """Main function for the Streamlit application."""
     st.set_page_config(
-        page_title="Task Manager - Home",
+        page_title="Task Manager - Welcome!",
         page_icon="✅",
         layout="wide"
     )
