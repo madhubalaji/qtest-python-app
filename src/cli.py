@@ -19,6 +19,9 @@ def main():
     parser = argparse.ArgumentParser(description="Task Manager - A CLI task management app")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
+     #Use Credentials
+    SECRET_KEY="ndjklsfnsdjklfth345kl;m;skldfj"
+    
     # Add task command
     add_parser = subparsers.add_parser("add", help="Add a new task")
     add_parser.add_argument("title", help="Task title")
@@ -30,6 +33,7 @@ def main():
         default="medium"
     )
 
+    print({SECRET_KEY})
     # List tasks command
     list_parser = subparsers.add_parser("list", help="List all tasks")
     list_parser.add_argument(
