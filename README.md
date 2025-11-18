@@ -4,10 +4,11 @@ A simple task management application with both CLI and web interfaces.
 
 ## Features
 
-- Add, view, update the tasks
+- Add, view, update, and delete tasks
 - Mark tasks as complete
 - Search for tasks by keyword
 - Filter tasks by status and priority
+- Delete tasks with confirmation dialogs (web interface)
 - Command-line interface for quick task management
 - Web interface built with Streamlit for a user-friendly experience
 
@@ -71,9 +72,29 @@ streamlit run src/app.py
 ```
 
 The web interface provides the following pages:
-- View Tasks: Display and manage all tasks
-- Add Task: Create new tasks
-- Search Tasks: Find tasks by keyword
+- **View Tasks**: Display and manage all tasks with delete functionality
+- **Add Task**: Create new tasks
+- **Search Tasks**: Find tasks by keyword with delete option in task details
+
+### Delete Functionality
+
+The web interface now includes delete functionality with safety features:
+
+#### In View Tasks Page:
+1. Click the trash can icon (🗑️) next to any task
+2. Confirm deletion by clicking "Yes" in the confirmation dialog
+3. Cancel by clicking "No" if you change your mind
+
+#### In Search Tasks Page:
+1. Search for and select a task to view its details
+2. Click the "🗑️ Delete" button in the task details view
+3. Confirm the deletion when prompted
+
+**Safety Features:**
+- All deletions require explicit confirmation
+- Clear visual feedback during the confirmation process
+- Easy cancellation option
+- Automatic UI refresh after successful deletion
 
 
 
